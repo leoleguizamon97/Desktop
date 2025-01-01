@@ -38,6 +38,8 @@ sleep 5
 echo "Actualizando la lista de paquetes..."
 apt update
 
+sleep 5
+
 # Actualizar el sistema a testing
 echo "Actualizando el sistema a 'testing'..."
 apt full-upgrade -y
@@ -48,9 +50,6 @@ apt autoremove -y
 
 echo "Migración a Debian 'testing' completada."
 echo "Reinicia tu sistema para aplicar los cambios."
-
-
-
 
 # Crear directorios como usuario regular
 sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/sway
@@ -63,20 +62,22 @@ mkdir -p /usr/local/share/fonts
 
 # Lista de paquetes a verificar
 paquetes=(
-    sway swaybg swayidle swaylock wofi brightnessctl pipewire playerctl firefox git
+    sway swaybg swayidle swaylock wofi brightnessctl pipewire playerctl 
+	firefox firefox-esr p7zip-full 
     #yazi ffmpeg p7zip jq poppler fd ripgrep fzf zoxide imagemagick
 )
-apt install -y sway swaybg swayidle swaylock wofi brightnessctl pipewire playerctl firefox git
 
 # Función para verificar si un paquete está disponible en los repositorios
 check_and_install() {
     if apt-cache policy "$1" | grep -q "Candidate:"; then
         echo "El paquete '$1' está disponible. Instalando..."
+		echo ""
+		sleep 2
         apt install -y "$1"
     else
         echo "El paquete '$1' NO está disponible en los repositorios."
+		sleep 5
     fi
-	sleep 3
 }
 
 # Actualizar repositorios
@@ -88,11 +89,10 @@ for paquete in "${paquetes[@]}"; do
     check_and_install "$paquete"
 done
 
-
 # Descargar y descomprimir la fuente Nerd Font Hasklig
 cd /home/"$SUDO_USER"/Downloads || exit
 sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip
-sudo unzip -o Hasklig.zip -d /usr/local/share/fonts
+sudo 7z x Hasklig.zip -o/usr/local/share/fonts
 fc-cache -fv
 
 # Descargar configuración de sway
@@ -100,3 +100,9 @@ sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home
 chmod -R 755 /usr/local/share/fonts
 
 echo "Instalación completada correctamente."
+echo "Reiniciando el sistema..."
+for i in {5..1}; do
+	echo -n "$i "
+	sleep 1
+done
+reboot now
