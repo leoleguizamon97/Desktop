@@ -6,6 +6,26 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+echo "Elige el modo de instalación: "
+echo -e "|\t _____________________________________ "
+echo -e "|\t|                                     |"
+echo -e "|\t| 1. Instalación completa DEBIAN      |"
+echo -e "|\t| 2. Instalación completa ARCH        |"
+echo -e "|\t| ------------------------------------|"
+echo -e "|\t| 3. Actualizar Debian a 'testing'    |"
+echo -e "|\t| 4. Actualizar configuracion de Sway |"
+echo -e "|\t| 5. Salir                            |"
+echo -e "|\t|_____________________________________|"
+
+read -p "Opción: " opcion
+
+
+
+
+
+
+
+
 echo "Este script migrará tu sistema Debian a la versión 'testing'."
 
 # Confirmación del usuario
