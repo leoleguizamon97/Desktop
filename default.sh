@@ -1,13 +1,21 @@
 #!/bin/bash
 
+if [ "$EUID" -ne 0 ]; then
+    echo "Por favor, ejecuta este script con sudo."
+    exit 1
+fi
+
+sudo -u "$SUDO_USER" mkdir -p /home/$SUDO_USER/.config/sway
+sudo -u "$SUDO_USER" mkdir -p /home/$SUDO_USER/Downloads
+sudo -u "$SUDO_USER" mkdir -p /usr/local/share/fonts
 # Instalación de paquetes necesarios
-sudo apt install -y sway swaybg swayidle swaylock wofi brightnessctl pipewire playerctl firefox
+sudo -u "$SUDO_USER" apt install -y sway swaybg swayidle swaylock wofi brightnessctl pipewire playerctl firefox git
 # sudo apt install -y yazi ffmpeg p7zip jq poppler fd ripgrep fzf zoxide imagemagick
 
 # Descargar y descomprimir la fuente Nerd Font Hasklig
-cd ~/Downloads || exit
+sudo -u "$SUDO_USER" cd /home/$USER_DIR/Downloads || exit
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip
-sudo unzip -o Hasklig.zip -d /usr/local/share/fonts
+sudo -u "$SUDO_USER" unzip -o Hasklig.zip -d /usr/local/share/fonts
 fc-cache -fv
 
 # Descargar configuración de sway
