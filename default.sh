@@ -6,6 +6,52 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+echo "Este script migrará tu sistema Debian a la versión 'testing'."
+
+# Confirmación del usuario
+read -p "¿Estás seguro de que deseas continuar? (s/n): " respuesta
+if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
+    echo "Operación cancelada."
+    exit 0
+fi
+
+# Hacer un respaldo del archivo sources.list
+echo "Haciendo respaldo de /etc/apt/sources.list..."
+cp /etc/apt/sources.list /etc/apt/sources.list.bak
+
+# Configurar los repositorios para testing
+echo "Configurando los repositorios para 'testing'..."
+cat <<EOF > /etc/apt/sources.list
+deb http://deb.debian.org/debian testing main contrib non-free
+deb-src http://deb.debian.org/debian testing main contrib non-free
+
+deb http://security.debian.org/debian-security testing-security main contrib non-free
+deb-src http://security.debian.org/debian-security testing-security main contrib non-free
+
+deb http://deb.debian.org/debian testing-updates main contrib non-free
+deb-src http://deb.debian.org/debian testing-updates main contrib non-free
+EOF
+
+sleep 5
+
+# Actualizar lista de paquetes
+echo "Actualizando la lista de paquetes..."
+apt update
+
+# Actualizar el sistema a testing
+echo "Actualizando el sistema a 'testing'..."
+apt full-upgrade -y
+
+# Limpiar paquetes obsoletos
+echo "Eliminando paquetes obsoletos..."
+apt autoremove -y
+
+echo "Migración a Debian 'testing' completada."
+echo "Reinicia tu sistema para aplicar los cambios."
+
+
+
+
 # Crear directorios como usuario regular
 sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/sway
 sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/Downloads
@@ -30,6 +76,7 @@ check_and_install() {
     else
         echo "El paquete '$1' NO está disponible en los repositorios."
     fi
+	sleep 3
 }
 
 # Actualizar repositorios
