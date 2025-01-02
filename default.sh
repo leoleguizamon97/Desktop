@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e
 
 deb_file(){
 # Configurar los repositorios para testing
-echo -e "|\t Configurando los repositorios para 'testing'..."
+echo -e "Configurando los repositorios para 'testing'..."
 
 cat <<EOF >/etc/apt/sources.list
 deb http://deb.debian.org/debian testing main contrib non-free
@@ -18,12 +19,14 @@ EOF
 
 ### VARIABLES ###
 
-	TAB=$'\t'
-	MSG=""
+	TAB='$\t'
+	TAB_SIZE='\t'
+	TITLE="Instalador de Sway"
+	MSG=" ¡Hola mundo! "
 	DISTRO=""
 	# Lista de paquetes a verificar
 	deb_paquetes=(
-		sway
+		 sway
 		swaybg
 		swayidle
 		swaylock
@@ -59,81 +62,89 @@ EOF
 	)
 
 ### FUNCIONES ###
-# Listo
+
 	spinner() {
 		local pid=$1
 		local delay=0.1
 		local spinstr='|/-\'
-		
+	
 		while kill -0 "$pid" 2>/dev/null; do
 			for ((i=0; i<${#spinstr}; i++)); do
-				printf "\r|\t[%c] ${2} " "${spinstr:i:1}"
+				printf "\033[F\033[2K"
+				printf "\r║%*s[%c]%*s ║\n" $((20 - ${#2}/2)) "" "${spinstr:i:1}" $((29 - ${#2}/2)) "$2"
+				draw_footer
 				sleep "$delay"
 			done
 		done
-		printf "\r|\t[✔] Listo!                                                    \n"
+		printf "\033[F\033[2K"
+		printf "║ %50s ║\n\n" " [✔] Listo"
 	}
 # Listo
 	ver_sudo() {
 		if [ "$EUID" -ne 0 ]; then
-			printf "\t ___________________________________________\n"
-			printf "\t|                                           |\n"
-			printf "\t| Por favor, ejecuta este script con $ sudo |\n"
-			printf "\t|___________________________________________|\n"
+			clear
+			printf "\t\n"
+			printf "\t╔═══════════════════════════════════════════╗\n"
+			printf "\t║                                           ║\n"
+			printf "\t║ Por favor, ejecuta este script con $ sudo ║\n"
+			printf "\t║                                           ║\n"
+			printf "\t╚═══════════════════════════════════════════╝\n"
 			printf "\t\n"
 			exit 1
 		fi
 	}
 
 	reiniciar(){
-		printf "|\t Reiniciando el sistema en: "
+		MSG="Reinicio"
+		printf "║      Reiniciando el sistema en: "
 		for i in {5..1}; do
-			printf " $i... "
+			printf " $i! "
 			sleep 1
 		done
 		printf "\n Bye! \n\n"
+		sleep 2
 		reboot now
 	}
 
 	actualizar_debian() {
 
-		printf "|\t Este script migrará tu sistema Debian a la versión 'testing'."
-		read -p "|$TAB ¿Estás seguro de que deseas continuar? (s/n): " respuesta
+		printf "║      Este script migrará tu sistema Debian a la versión 'testing'."
+		read -p "║$TAB ¿Estás seguro de que deseas continuar? (s/n): " respuesta
 		
 		if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
-			echo -e "|\t Operación cancelada."
+			echo -e "║      Operación cancelada."
 			return 1
 		fi
 
 		# Hacer un respaldo del archivo sources.list
-		echo -e "|\t Haciendo respaldo de /etc/apt/sources.list..."
+		echo -e "║      Haciendo respaldo de /etc/apt/sources.list..."
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null
 
 		deb_file
 
-		echo -e "|\t Repositorios configurados correctamente."
+		echo -e "║      Repositorios configurados correctamente."
 		
 		# Actualizar lista de paquetes
-		echo -e "|\t Actualizando la lista de paquetes..."
+		echo -e "║      Actualizando la lista de paquetes..."
 		apt update & > /dev/null
 		pid=$!
 		clear
 		spinner "$pid"
 
 		# Actualizar lista de paquetes
-		echo -e "|\t Actualizando la lista de paquetes..."
+		echo -e "║      Actualizando la lista de paquetes..."
 		apt update > /dev/null
 
 		# Actualizar el sistema a testing
-		echo -e "|\t Actualizando el sistema a 'testing'..."
+		echo -e "║      Actualizando el sistema a 'testing'..."
 		apt full-upgrade -y
 
 		# Limpiar paquetes obsoletos
-		echo -e "|\t Eliminando paquetes obsoletos..."
+		echo -e "║      Eliminando paquetes obsoletos..."
 		apt autoremove -y
 
-		echo -e "|\t Migración a Debian 'testing' completada."
-		echo -e "|\t Reinicia tu sistema para aplicar los cambios."
+		echo -e "║      Migración a Debian 'testing' completada."
+		echo -e "║      Reinicia tu sistema para aplicar los cambios."
 
 	}
 
@@ -155,18 +166,18 @@ EOF
 		# Función para verificar si un paquete está disponible en los repositorios
 		check_and_install() {
 			if apt-cache policy "$1" | grep -q "Candidate:"; then
-				echo -e "|\t El paquete '$1' está disponible. Instalando..."
-				echo -e "|\t "
+				echo -e "║      El paquete '$1' está disponible. Instalando..."
+				echo -e "║      "
 				sleep 2
 				apt install -y "$1" > /dev/null
 			else
-				echo -e "|\t El paquete '$1' NO está disponible en los repositorios."
+				echo -e "║      El paquete '$1' NO está disponible en los repositorios."
 				sleep 5
 			fi
 		}
 
 		# Actualizar repositorios
-		echo -e "|\t Actualizando lista de paquetes..."
+		echo -e "║      Actualizando lista de paquetes..."
 		apt update
 
 		# Verificar e instalar los paquetes disponibles
@@ -175,9 +186,9 @@ EOF
 		done
 
 		# Descargar configuración de sway
-		echo -e "|\t Descargando configuración de Sway..."
+		echo -e "║      Descargando configuración de Sway..."
 		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null
-		echo -e "|\t Instalación completada correctamente."
+		echo -e "║      Instalación completada correctamente."
 
 		sleep 5
 
@@ -186,30 +197,30 @@ EOF
 	#sway_arch_install(){}
 	
 	#swat_ubunt_install(){}
-
+# Listo
 	fonts_install(){
 		# Verificar 7z
 		if [ "$DISTRO" == "debian" ]; then
-			echo -e "|\t Instalando p7zip-full en Debian..."
+			echo -e "║      Instalando p7zip-full en Debian..."
 			apt install -y p7zip-full > /dev/null 2>&1 &
 			pid=$!
 			spinner "$pid" "Instalando p7zip-full"
 
 		elif [ "$DISTRO" == "arch" ]; then
-			echo -e "|\t Instalando p7zip en Arch..."
+			echo -e "║      Instalando p7zip en Arch..."
 			pacman -S p7zip > /dev/null 2>&1 &
 			pid=$!
 			spinner "$pid" "Instalando p7zip-full"
 
 		elif [ "$DISTRO" == "ubuntu" ]; then
-			echo -e "|\t Instalando p7zip-full en Ubuntu..."
+			echo -e "║      Instalando p7zip-full en Ubuntu..."
 			apt install -y p7zip-full > /dev/null 2>&1 &
 			pid=$!
 			spinner "$pid" "Instalando p7zip-full"
 		fi
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
 		cd /home/"$SUDO_USER"/Downloads
-		sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null &
+		sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null 2>&1 &
 			pid=$!
 			spinner "$pid" "Descargando Nerdfont Hasklig"
 		sudo 7z x Hasklig.zip -o/usr/local/share/fonts > /dev/null 2>&1 &
@@ -220,10 +231,10 @@ EOF
 			pid=$!
 			spinner "$pid" "Actualizando caché de fuentes"
 		chmod -R 755 /usr/local/share/fonts > /dev/null
-		echo -e "|\t Fuentes instaladas correctamente."
+		MSG="Fuentes instaladas correctamente."
 		sleep 30
 	}
-#Listo
+# Listo
 	ver_distro(){
 		if [ -f /etc/debian_version ]; then
 			DISTRO="debian"
@@ -233,73 +244,119 @@ EOF
 		elif [ -f /etc/lsb-release ]; then
 			DISTRO="ubuntu"
 		else
-			echo -e "|\t No se pudo determinar la distribución."
+			echo -e "║      No se pudo determinar la distribución."
+			return 1
 		fi
-		echo -e "|\t Distribución detectada: $DISTRO"
+		echo -e "║      Distribución detectada: $DISTRO"
+		return 0
+		sleep 2
+	}
+
+	# Listo
+	draw_footer(){
+		printf "╚" && printf "═%.0s" {1..34} && printf "leoleguizamon97═╝"
+	}
+	draw_header(){
+		clear
+		ancho=30
+		largoMsg=0
+		
+		if [[ ${#MSG}%2 == 0 ]]; then
+			largoMsg=${#MSG}
+		else
+			largoMsg=${#MSG}+1
+		fi
+
+		borde=$(( ($ancho - $largoMsg) / 2 ))
+		
+		centro=""
+		for i in $(seq 1 $borde); do
+			centro+="M"
+		done
+		centro+="$MSG"
+		for i in $(seq 1 $borde); do
+			centro+="M"
+		done
+
+		printf "╔" && printf "═%.0s" {1..10} && printf "%.30s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
+		printf "║ \n"
+		
+		
 	}
 
 	# Ciclo principal
 	main(){
+		draw_header
 		while [ true ]; do
-			clear
-			echo -e "|\t Elige el modo de instalación: "
-			echo -e "|"
-			echo -e "|\t _____________________________________ "
-			echo -e "|\t|                                     |"
-			echo -e "|\t| 1. Instalación completa             |"
-			echo -e "|\t| ------------------------------------|"
-			echo -e "|\t| 2. Actualizar configuracion de Sway |"
-			echo -e "|\t| 3. Instalación de fuentes           |"
-			echo -e "|\t| 8. Actualizar Debian a 'testing'    |"
-			echo -e "|\t| 9. Reiniciar el sistema             |"
-			echo -e "|\t| 0. Salir                            |"
-			echo -e "|\t|_____________________________________|"
-			echo -e "|\t"
-			echo -e "|\t Sisema detectado: $DISTRO"
-			echo -e "|\t"
-			echo -e "|\t ${MSG}"
-			read -p "|${TAB} Selecciona opcion: " opcion
+			echo -e "║      Elige el modo de instalación: "
+			echo -e "║" 
+			echo -e "║     ╔═════════════════════════════════════╗"
+			echo -e "║     ║                                     ║"
+			echo -e "║     ║ 1. Instalación completa             ║"
+			echo -e "║     ║ ------------------------------------║"
+			echo -e "║     ║ 2. Actualizar configuracion de Sway ║"
+			echo -e "║     ║ 3. Instalación de fuentes           ║"
+			echo -e "║     ║ 8. Actualizar Debian a 'testing'    ║"
+			echo -e "║     ║ 9. Reiniciar el sistema             ║"
+			echo -e "║     ║ 0. Salir                            ║"
+			echo -e "║     ║                                     ║"
+			echo -e "║     ╚═════════════════════════════════════╝"
+			echo -e "║     "
+			echo -e "║      Sisema detectado: $DISTRO"
+			echo -e "║     "
+			read -p "║     Selecciona opcion: " opcion 
+			draw_footer
 
 			if [ "$opcion" == "1" ]; then
 				clear
-				echo -e "|\t Instalación completa DEBIAN"
+				MSG =  "Instalación completa DEBIAN"
 				sleep 3
 				actualizar_debian
 			elif [ "$opcion" == "2" ]; then
 				clear
-				echo -e "|\t Instalación completa ARCH"
+				MSG =  "Instalación completa ARCH"
 				sleep 3
 				sway_arch_install
 			elif [ "$opcion" == "3" ]; then
 				clear
-				echo -e "|\t Instalación de fuentes"
+				MSG =  "Instalación de fuentes"
 				fonts_install
 				sleep 5
 			elif [ "$opcion" == "4" ]; then
-				echo -e "|\t Actualizar configuracion de Sway"
+				MSG =  "Actualizar configuracion de Sway"
 				sleep 5
 			elif [ "$opcion" == "4" ]; then
 				clear 
-				echo -e "|\t Actualizar Debian a 'testing'"
+				MSG =  "Actualizar Debian a 'testing'"
 				sleep 5
 			elif [ "$opcion" == "9" ]; then
-				echo -e "|\t Reiniciar el sistema"
+				clear
+
+				MSG="Reiniciar el sistema"
 				reiniciar
 			elif [ "$opcion" == "0" ]; then
+				clear
+				MSG="123456789|123456789|123456789|123456789"
+				draw_header
 				sleep 3 &
 				printf "\r                                         "
 				spinner "$!" "¡Adios!"
 				exit 0
 			else
-				echo -e "|\t Opción no válida."
 				clear
+				MSG =  "║      Opción no válida."
 			fi
 
 		done
 	}
 
+leo="leoleguizamon97"
+echo ${#leo}
+
 ### MAIN ###
 ver_sudo
+draw_header
+
 ver_distro
-#mk_directorios
+mk_directorios
 main
