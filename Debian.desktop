@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Name=Debian
+Comment=Starts the VirtualBox machine Debian
+Type=Application
+Exec=/usr/lib/virtualbox/VirtualBoxVM --comment "Debian" --startvm "{05452391-b99f-4aac-b98a-d4e556491d8c}"
+Icon=virtualbox-vbox.png
