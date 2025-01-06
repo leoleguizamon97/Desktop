@@ -60,26 +60,7 @@ EOF
 		zoxide
 		imagemagick
 	)
-
-### FUNCIONES ###
-
-	spinner() {
-		local pid=$1
-		local delay=0.1
-		local spinstr='|/-\'
-	
-		while kill -0 "$pid" 2>/dev/null; do
-			for ((i=0; i<${#spinstr}; i++)); do
-				printf "\033[F\033[2K"
-				printf "\r║%*s[%c]%*s ║\n" $((20 - ${#2}/2)) "" "${spinstr:i:1}" $((29 - ${#2}/2)) "$2"
-				draw_footer
-				sleep "$delay"
-			done
-		done
-		printf "\033[F\033[2K"
-		printf "║ %50s ║\n\n" " [✔] Listo"
-	}
-# Listo
+### Funciones TERMINADAS ###
 	ver_sudo() {
 		if [ "$EUID" -ne 0 ]; then
 			clear
@@ -93,6 +74,31 @@ EOF
 			exit 1
 		fi
 	}
+
+	spinner() {
+		local pid=$1
+		local delay=0.1
+		local spinstr='|/-\'
+		printf "\n"
+		while kill -0 "$pid" 2>/dev/null; do
+			for ((i=0; i<${#spinstr}; i++)); do
+				printf "\033[F\033[2K"							#Vuelve a linea anterior y limpia
+				printf "\r║ %.30s %$((48 > ${#2} ? 43 - ${#2} : 3))s [%s] ║\n" "$2" "" "${spinstr:i:1}"
+				draw_footer
+				sleep "$delay"
+			done
+		done
+		printf "\033[F\033[2K"
+		printf "║ %50s ║\n\n" " [✔] Listo"
+	}
+
+	draw_footer(){
+		printf "╚" && printf "═%.0s" {1..34} && printf "leoleguizamon97═╝"
+	}
+
+
+### FUNCIONES ###
+
 
 	reiniciar(){
 		MSG="Reinicio"
@@ -197,7 +203,7 @@ EOF
 	#sway_arch_install(){}
 	
 	#swat_ubunt_install(){}
-# Listo
+
 	fonts_install(){
 		# Verificar 7z
 		if [ "$DISTRO" == "debian" ]; then
@@ -234,7 +240,7 @@ EOF
 		MSG="Fuentes instaladas correctamente."
 		sleep 30
 	}
-# Listo
+
 	ver_distro(){
 		if [ -f /etc/debian_version ]; then
 			DISTRO="debian"
@@ -252,34 +258,32 @@ EOF
 		sleep 2
 	}
 
-	# Listo
-	draw_footer(){
-		printf "╚" && printf "═%.0s" {1..34} && printf "leoleguizamon97═╝"
-	}
+
+
 	draw_header(){
 		clear
 		ancho=30
-		largoMsg=0
+		largoTitulo=0
 		
-		if [[ ${#MSG}%2 == 0 ]]; then
-			largoMsg=${#MSG}
+		if [[ ${#TITLE}%2 == 0 ]]; then
+			largoTitulo=${#TITLE}
 		else
-			largoMsg=${#MSG}+1
+			largoTitulo=${#TITLE}+1
 		fi
 
-		borde=$(( ($ancho - $largoMsg) / 2 ))
+		borde=$(( ($ancho - $largoTitulo) / 2 ))
 		
 		centro=""
 		for i in $(seq 1 $borde); do
-			centro+="M"
+			centro+=" "
 		done
-		centro+="$MSG"
+		centro+="$TITLE"
 		for i in $(seq 1 $borde); do
-			centro+="M"
+			centro+=" "
 		done
 
 		printf "╔" && printf "═%.0s" {1..10} && printf "%.30s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
-		printf "║ \n"
+		printf "║" && printf "%50s" && printf "║\n"
 		
 		
 	}
@@ -309,25 +313,25 @@ EOF
 
 			if [ "$opcion" == "1" ]; then
 				clear
-				MSG =  "Instalación completa DEBIAN"
+				MSG="Instalación completa DEBIAN"
 				sleep 3
 				actualizar_debian
 			elif [ "$opcion" == "2" ]; then
 				clear
-				MSG =  "Instalación completa ARCH"
+				MSG="Instalación completa ARCH"
 				sleep 3
 				sway_arch_install
 			elif [ "$opcion" == "3" ]; then
 				clear
-				MSG =  "Instalación de fuentes"
+				MSG="Instalación de fuentes"
 				fonts_install
 				sleep 5
 			elif [ "$opcion" == "4" ]; then
-				MSG =  "Actualizar configuracion de Sway"
+				MSG="Actualizar configuracion de Sway"
 				sleep 5
 			elif [ "$opcion" == "4" ]; then
 				clear 
-				MSG =  "Actualizar Debian a 'testing'"
+				MSG="Actualizar Debian a 'testing'"
 				sleep 5
 			elif [ "$opcion" == "9" ]; then
 				clear
@@ -336,15 +340,15 @@ EOF
 				reiniciar
 			elif [ "$opcion" == "0" ]; then
 				clear
-				MSG="123456789|123456789|123456789|123456789"
 				draw_header
+				MSG="123456789|123456789|123456789|123456789"
 				sleep 3 &
 				printf "\r                                         "
-				spinner "$!" "¡Adios!"
+				spinner "$!" "Adios!"
 				exit 0
 			else
 				clear
-				MSG =  "║      Opción no válida."
+				MSG="║      Opción no válida."
 			fi
 
 		done
