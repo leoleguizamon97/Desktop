@@ -192,22 +192,27 @@ EOF
 
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1
-		spinner $! "Haciendo respaldo de /etc/apt/sources.list"
+		draw_footer
+		spinner "$!" "Haciendo respaldo de /etc/apt/sources.list"
 		
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1
-		spinner $! "Configurando los repositorios para testing"
+		draw_footer
+		spinner "$!" "Configurando los repositorios para testing"
 		
 		# Actualizar lista de paquetes
-		apt update > /dev/null 2>&1
+		apt update -y > /dev/null 2>&1
+		draw_footer
 		spinner "$!" "Actualizando la lista de paquetes"
 
 		# Actualizar el sistema a testing
 		apt full-upgrade -y > /dev/null 2>&1
-		spinner $! "Actualizando el sistema a 'testing'"
+		draw_footer
+		spinner "$!" "Actualizando el sistema a 'testing'"
 
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1
+		draw_footer
 		spinner $! "Eliminando paquetes obsoletos"
 
 		printf "║                                                  ║\n"
@@ -256,7 +261,8 @@ EOF
 			if apt-cache policy "$1" | grep -q "Candidate:"; then
 				printf "║    El paquete '$1' está disponible               ║\n"
 				apt install -y "$1" > /dev/null 2>&1
-				spinner $! "Instalando $1"
+				pid=$!
+				spinner "$pid" "Instalando $1"
 			else
 				printf "║                                                  ║\n"
 				printf "║    El paquete '$1' NO está disponible        [x] ║\n"
