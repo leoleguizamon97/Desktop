@@ -193,12 +193,12 @@ EOF
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1
 		draw_footer
-		spinner "$!" "Haciendo respaldo de /etc/apt/sources.list"
+		spinner "$!" "Haciendo respaldo de sources.list"
 		
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1
 		draw_footer
-		spinner "$!" "Configurando los repositorios para testing"
+		spinner "$!" "Configurando los repositorios"
 		
 		# Actualizar lista de paquetes
 		apt update -y > /dev/null 2>&1
