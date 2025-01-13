@@ -199,7 +199,7 @@ EOF
 		spinner $! "Configurando los repositorios para testing"
 		
 		# Actualizar lista de paquetes
-		apt update & > /dev/null 2>&1
+		apt update > /dev/null 2>&1
 		spinner "$!" "Actualizando la lista de paquetes"
 
 		# Actualizar el sistema a testing
