@@ -278,6 +278,9 @@ EOF
 		spinner $! "Descargando configuración de Sway"
 		sleep 5
 
+		# Mover bg a la carpeta de sway
+		sudo -u "$SUDO_USER" mv /home/"$SUDO_USER"/Desktop/bg.png /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1
+		spinner $! "Moviendo bgs a la carpeta de sway"
 	}
 
 	#sway_arch_install(){}
