@@ -112,7 +112,7 @@ EOF
 		done
 
 		printf "╔" && printf "═%.0s" {1..10} && printf "%.30s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
-		printf "║" && printf "%50s" && printf "║\n"
+		printf "║" && printf "%50s" && printf "║\n\n"
 	}
 
 	draw_footer(){
@@ -172,7 +172,6 @@ EOF
 	}
 
 	actualizar_debian() {
-
 		# Configurar los repositorios para testing
 		printf "║    Este script migrará tu sistema Debian a       ║\n"
 		printf "║    a versión 'testing'                           ║\n"
@@ -184,37 +183,39 @@ EOF
 		
 		if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
 			printf "\033[F║    Operación cancelada                           ║\n"
-			printf "║                                                  ║\n"
 			draw_footer
 			return
 		fi
-		draw_header
-		printf "║                                                  ║\n"
+
+		# Inicio
+		# draw_header
+
 		# Hacer un respaldo del archivo sources.list
-		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1
+		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1 &
 		spinner "$!" "Haciendo respaldo de sources.list"
 		
 		# Configurar los repositorios para testing
-		deb_file > /dev/null 2>&1
+		deb_file > /dev/null 2>&1 &
 		spinner "$!" "Configurando los repositorios"
 		
 		# Actualizar lista de paquetes
-		apt update -y > /dev/null 2>&1
+		apt update -y > /dev/null 2>&1 &
 		pid=$!
 		spinner "$pid" "Actualizando la lista de paquetes"
 
 		# Fix broken packages
-		apt --fix-broken install -y > /dev/null 2>&1
+		apt --fix-broken install -y > /dev/null 2>&1 &
 		spinner "$!" "Fixing broken packages"
 
 		# Actualizar el sistema a testing
-		apt full-upgrade -y > /dev/null 2>&1
+		apt full-upgrade -y > /dev/null 2>&1 &
 		spinner "$!" "Actualizando el sistema"
 
 		# Limpiar paquetes obsoletos
-		apt autoremove -y > /dev/null 2>&1
+		apt autoremove -y > /dev/null 2>&1 &
 		spinner $! "Eliminando paquetes obsoletos"
-		printf "\033[F"
+		
+		# Completado
 		printf "║                                                  ║\n"
 		printf "║    Migración a Debian 'testing' completada       ║\n"
 		printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
@@ -223,7 +224,6 @@ EOF
 	}
 
 	fonts_install(){
-		printf "\n"
 		# Verificar 7z
 		if [ "$DISTRO" == "Debian" ]; then
 			apt install -y p7zip-full > /dev/null 2>&1 &
@@ -240,9 +240,14 @@ EOF
 		fi
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
 		cd /home/"$SUDO_USER"/Downloads
-		sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null 2>&1 &
-			pid=$!
-			spinner "$pid" "Descargando Nerdfont Hasklig"
+		if [ -f "/home/"$SUDO_USER"/Downloads/Hasklig.zip" ]; then
+			sleep 3 2>&1 &
+			spinner "$pid" "Fuentes ya descargadas!"
+		else
+			sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null 2>&1 &
+				pid=$!
+				spinner "$pid" "Descargando Nerdfont Hasklig"
+		fi
 		sudo 7z x Hasklig.zip -o/usr/local/share/fonts > /dev/null 2>&1 &
 			pid=$!
 			spinner "$pid" "Descomprimiendo Nerdfont Hasklig"
@@ -297,7 +302,7 @@ EOF
 	main(){
 		while [ true ]; do
 			draw_header
-			printf "║      Elige el modo de instalación:               ║\n"
+			printf "\033[F║      Elige el modo de instalación:               ║\n"
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║                                     ║      ║\n"
