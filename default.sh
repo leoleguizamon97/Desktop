@@ -317,6 +317,10 @@ EOF
 				draw_header
 				actualizar_debian
 				sleep 5
+			elif [ "$opcion" == "2" ]; then
+				draw_header
+				fonts_install
+				sleep 5
 			elif [ "$opcion" == "9" ]; then
 				draw_header
 				reiniciar
