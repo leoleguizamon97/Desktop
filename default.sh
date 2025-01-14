@@ -214,7 +214,7 @@ EOF
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1
 		spinner $! "Eliminando paquetes obsoletos"
-
+		printf "\033[F"
 		printf "║                                                  ║\n"
 		printf "║    Migración a Debian 'testing' completada       ║\n"
 		printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
