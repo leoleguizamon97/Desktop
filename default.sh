@@ -153,6 +153,14 @@ EOF
 		sleep 2
 	}
 
+	no_valida(){
+		draw_header
+		printf "║                                                  ║\n"
+		printf "║    Opcion no valida                             ║\n"
+		draw_footer
+		sleep 2
+	}
+
 	salir(){
 		printf "║                                                  ║\n"
 		sleep 1 &
@@ -350,6 +358,14 @@ EOF
 				draw_header
 				actualizar_dotfiles
 				sleep 5
+			elif [ "$opcion" == "3" ]; then
+				draw_header
+				if [ "$DISTRO" == "Debian" ]; then
+					actualizar_debian
+				else
+					no_valida
+				fi
+				sleep 5
 			elif [ "$opcion" == "8" ]; then
 				draw_header
 				fonts_install
@@ -361,11 +377,7 @@ EOF
 				draw_header
 				salir
 			else
-				draw_header
-				printf "║  Opcion no Valida                                ║\n"
-				printf "║                                                  ║\n"
-				draw_footer
-				sleep 1
+				no_valida
 			fi
 
 		done
