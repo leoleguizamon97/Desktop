@@ -189,7 +189,7 @@ EOF
 			draw_footer
 			return
 		fi
-
+		draw_footer
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1
 		spinner "$!" "Haciendo respaldo de sources.list"
@@ -209,7 +209,7 @@ EOF
 
 		# Actualizar el sistema a testing
 		apt full-upgrade -y > /dev/null 2>&1
-		spinner "$!" "Actualizando el sistema a 'testing'"
+		spinner "$!" "Actualizando el sistema"
 
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1
@@ -301,11 +301,8 @@ EOF
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║                                     ║      ║\n"
-			printf "║     ║ 1. Instalación completa             ║      ║\n"
+			printf "║     ║ 1. Actualizar Debian a 'testing'    ║      ║\n"
 			printf "║     ║ ------------------------------------║      ║\n"
-			printf "║     ║ 2. Actualizar configuracion de Sway ║      ║\n"
-			printf "║     ║ 3. Instalación de fuentes           ║      ║\n"
-			printf "║     ║ 8. Actualizar Debian a 'testing'    ║      ║\n"
 			printf "║     ║ 9. Reiniciar el sistema             ║      ║\n"
 			printf "║     ║ 0. Salir                            ║      ║\n"
 			printf "║     ║                                     ║      ║\n"
@@ -322,19 +319,6 @@ EOF
 			if [ "$opcion" == "1" ]; then
 				draw_header
 				actualizar_debian
-				sleep 5
-			elif [ "$opcion" == "2" ]; then
-				draw_header
-				sleep 3
-				#sway_arch_install
-			elif [ "$opcion" == "3" ]; then
-				draw_header
-				fonts_install
-				sleep 5
-			elif [ "$opcion" == "4" ]; then
-				sleep 5
-			elif [ "$opcion" == "4" ]; then
-				draw_header
 				sleep 5
 			elif [ "$opcion" == "9" ]; then
 				draw_header
