@@ -200,7 +200,8 @@ EOF
 		
 		# Actualizar lista de paquetes
 		apt update -y > /dev/null 2>&1
-		spinner "$!" "Actualizando la lista de paquetes"
+		pid=$!
+		spinner "$pid" "Actualizando la lista de paquetes"
 
 		# Fix broken packages
 		apt --fix-broken install -y > /dev/null 2>&1
