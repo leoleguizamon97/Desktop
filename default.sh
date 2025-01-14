@@ -178,9 +178,8 @@ EOF
 		printf "║    a versión 'testing'                           ║\n"
 		printf "║                                                  ║\n"
 		printf "║                                                  ║\n"
-		printf "║                                                  ║\n"
 		draw_footer
-		printf "\033[F\033[F"
+		printf "\033[F"
 		read -p "║    ¿Deseas continuar? (s/n): " respuesta
 		
 		if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
@@ -195,7 +194,6 @@ EOF
 		
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1
-		printf "\n"
 		spinner "$!" "Configurando los repositorios"
 		
 		# Actualizar lista de paquetes
