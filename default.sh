@@ -24,23 +24,24 @@ EOF
 	DISTRO=""
 	# Lista de paquetes a verificar
 	deb_paquetes=(
-		 sway
+		sway
 		swaybg
 		swayidle
 		swaylock
+		swaync
 		wofi
 		brightnessctl
 		pipewire
 		playerctl
 		firefox-esr
 		p7zip-full
-		thunar
 	)
 	arch_paquetes=(
 		sway
 		swaybg
 		swayidle
 		swaylock
+		swaync
 		wofi
 		brightnessctl
 		pipewire
@@ -146,7 +147,6 @@ EOF
 			printf "║                                                  ║\n"
 			printf "║    No se pudo determinar la distribución         ║\n"
 			draw_footer
-			exit
 			return 1
 		fi
 		return 0
@@ -167,7 +167,7 @@ EOF
 			draw_footer
 			sleep 1
 		done
-		printf "\n Bye! \n\n"
+		printf "\033\033[2K[F║      Bye!                                         ║\n"
 		sleep 2
 		reboot now
 	}
@@ -297,9 +297,17 @@ EOF
 		spinner $! "Moviendo bgs a la carpeta de sway"
 	}
 
-	#sway_arch_install(){}
+	sway_arch_install(){
+		printf "║    Instalando sway y sus dependencias            ║\n"
+		sleep 5 & 
+		spinner "$!" "Not yet implemented"
+	}
 	
-	#swat_ubunt_install(){}
+	sway_ubuntu_install(){
+		printf "║    Instalando sway y sus dependencias            ║\n"
+		sleep 5 & 
+		spinner "$!" "Not yet implemented"
+	}
 
 	# Ciclo principal
 	main(){
@@ -309,11 +317,15 @@ EOF
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║                                     ║      ║\n"
-			printf "║     ║ 1. Actualizar Debian a 'testing'    ║      ║\n"
-			printf "║     ║ ------------------------------------║      ║\n"
+			printf "║     ║ 1. Instalar Sway/Apps               ║      ║\n"
+			printf "║     ║ 2. Actualizar dotfiles              ║      ║\n"
+			if [ "$DISTRO" == "Debian" ]; then
+			printf "║     ║ 3. Actualizar Debian a 'testing'    ║      ║\n"
+			fi
+			printf "║     ║                                     ║      ║\n"
+			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 9. Reiniciar el sistema             ║      ║\n"
 			printf "║     ║ 0. Salir                            ║      ║\n"
-			printf "║     ║                                     ║      ║\n"
 			printf "║     ╚═════════════════════════════════════╝      ║\n"
 			printf "║                                                  ║\n"
 			printf "║     %.40s %*s ║\n" "$DISTRO" $(( ${#DISTRO} < 43 ? 43 - ${#DISTRO} : 3  )) ""
@@ -326,9 +338,19 @@ EOF
 
 			if [ "$opcion" == "1" ]; then
 				draw_header
-				actualizar_debian
+				if [ "$DISTRO" == "Debian" ]; then
+					sway_deb_install
+				elif [ "$DISTRO" == "Arch" ]; then
+					sway_arch_install
+				elif [ "$DISTRO" == "Ubuntu" ]; then
+					sway_ubuntu_install
+				fi
 				sleep 5
 			elif [ "$opcion" == "2" ]; then
+				draw_header
+				actualizar_dotfiles
+				sleep 5
+			elif [ "$opcion" == "8" ]; then
 				draw_header
 				fonts_install
 				sleep 5
