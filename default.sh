@@ -80,20 +80,20 @@ EOF
 		while kill -0 "$pid" 2>/dev/null; do
 			for ((i=0; i<${#spinstr}; i++)); do
 				printf "\033[F"							#Vuelve a linea anterior y limpia \033[2K
-				printf "\r║ %.42s %$((50 > ${#2} ? 43 - ${#2} : 1))s [%s] ║\n" "$2" "" "${spinstr:i:1}"
+				printf "\r║ %.43s %$(( ${#2} < 43 ? 43 - ${#2} : 1))s [%s] ║\n" "$2" "" "${spinstr:i:1}"
 				sleep "$delay"
 				draw_footer
 			done
 		done
 		printf "\033[F"
-		printf "║ %.34s %$((50 > ${#2} ? 37 - ${#2} : 1))s %s ║\n\n" "$2" "" "Listo [✔]"
+		printf "║ %.37s %$((37 > ${#2} ? 37 - ${#2} : 1))s %s ║\n\n" "$2" "" "Listo [✔]"
 	}
 
 	draw_header(){
 		clear
 		ancho=30
 		largoTitulo=0
-		
+
 		if [[ ${#TITLE}%2 == 0 ]]; then
 			largoTitulo=${#TITLE}
 		else
@@ -101,18 +101,19 @@ EOF
 		fi
 
 		borde=$(( ($ancho - $largoTitulo) / 2 ))
-		
+
 		centro=""
 		for i in $(seq 1 $borde); do
 			centro+=" "
 		done
+
 		centro+="$TITLE"
 		for i in $(seq 1 $borde); do
 			centro+=" "
 		done
 
 		printf "╔" && printf "═%.0s" {1..10} && printf "%.30s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
-		printf "║" && printf "%50s" && printf "║\n\n"
+		printf "║" && printf "%50s" && printf "║\n"
 	}
 
 	draw_footer(){
@@ -180,24 +181,21 @@ EOF
 		draw_footer
 		printf "\033[F"
 		read -p "║    ¿Deseas continuar? (s/n): " respuesta
-		
+
 		if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
 			printf "\033[F║    Operación cancelada                           ║\n"
 			draw_footer
 			return
 		fi
 
-		# Inicio
-		# draw_header
-
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1 &
 		spinner "$!" "Haciendo respaldo de sources.list"
-		
+
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1 &
 		spinner "$!" "Configurando los repositorios"
-		
+
 		# Actualizar lista de paquetes
 		apt update -y > /dev/null 2>&1 &
 		pid=$!
@@ -214,8 +212,9 @@ EOF
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1 &
 		spinner $! "Eliminando paquetes obsoletos"
-		
+
 		# Completado
+		printf "\033[F"
 		printf "║                                                  ║\n"
 		printf "║    Migración a Debian 'testing' completada       ║\n"
 		printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
@@ -224,6 +223,10 @@ EOF
 	}
 
 	fonts_install(){
+
+		printf "║    Instalando fuente Nerd Font Hasklig           ║\n"
+		printf "║                                                  ║\n"
+		printf "║                                                  ║\n"
 		# Verificar 7z
 		if [ "$DISTRO" == "Debian" ]; then
 			apt install -y p7zip-full > /dev/null 2>&1 &
@@ -302,7 +305,7 @@ EOF
 	main(){
 		while [ true ]; do
 			draw_header
-			printf "\033[F║      Elige el modo de instalación:               ║\n"
+			printf "║      Elige el modo de instalación:               ║\n"
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║                                     ║      ║\n"
@@ -313,7 +316,7 @@ EOF
 			printf "║     ║                                     ║      ║\n"
 			printf "║     ╚═════════════════════════════════════╝      ║\n"
 			printf "║                                                  ║\n"
-			printf "║     Sistema detectado: %.20s %*s ║\n" "$DISTRO" $((24 - ${#DISTRO})) ""
+			printf "║     %.40s %*s ║\n" "$DISTRO" $(( ${#DISTRO} < 43 ? 43 - ${#DISTRO} : 3  )) ""
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
