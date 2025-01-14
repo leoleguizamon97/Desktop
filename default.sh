@@ -189,7 +189,6 @@ EOF
 			draw_footer
 			return
 		fi
-		draw_footer
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1
 		spinner "$!" "Haciendo respaldo de sources.list"
