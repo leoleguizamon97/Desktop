@@ -192,27 +192,27 @@ EOF
 
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1
-		draw_footer
 		spinner "$!" "Haciendo respaldo de sources.list"
 		
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1
-		draw_footer
+		printf "\n"
 		spinner "$!" "Configurando los repositorios"
 		
 		# Actualizar lista de paquetes
 		apt update -y > /dev/null 2>&1
-		draw_footer
 		spinner "$!" "Actualizando la lista de paquetes"
+
+		# Fix broken packages
+		apt --fix-broken install -y > /dev/null 2>&1
+		spinner "$!" "Fixing broken packages"
 
 		# Actualizar el sistema a testing
 		apt full-upgrade -y > /dev/null 2>&1
-		draw_footer
 		spinner "$!" "Actualizando el sistema a 'testing'"
 
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1
-		draw_footer
 		spinner $! "Eliminando paquetes obsoletos"
 
 		printf "║                                                  ║\n"
