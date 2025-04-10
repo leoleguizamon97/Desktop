@@ -35,4 +35,7 @@ echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com
 sudo dnf check-update
 sudo dnf install -y code
 
+# Brave
+curl -fsS https://dl.brave.com/install.sh | sh
+
 echo "Listo!"
