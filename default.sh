@@ -160,6 +160,12 @@ EOF
 		exit 1
 	}
 
+	draw_separator(){
+			printf "\033[F"
+			printf "╠══════════════════════════════════════════════════╣\n"
+			printf "║                                                  ║\n"
+	}
+
 ### Sistema
 
 	sys_exit(){
@@ -309,12 +315,6 @@ EOF
 ### FUNCIONES PENDIENTES ###
 
 	install_sway_deb(){
-		# Función para mostrar un separador
-		draw_separator(){
-			printf "\033[F"
-			printf "╠══════════════════════════════════════════════════╣\n"
-			printf "║                                                  ║\n"
-		}
 
 		# Función para verificar si un paquete está disponible en los repositorios
 		check_and_install() {
@@ -362,9 +362,30 @@ EOF
 	}
 
 	install_vscode(){
-		printf "║    Instalando VSCode                             ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
+		printf "║                                                  ║\n"
+		sudo apt-get install wget gpg apt-transport-https > /dev/null 2>&1 &
+		draw_spinner $! "Instalando dependencias"
+		
+		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg > /dev/null 2>&1 &
+		sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+		draw_spinner $! "Descargando clave"
+		
+		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null 2>&1 &
+		draw_spinner $! "Agregando repositorio"
+		
+		rm -f packages.microsoft.gpg > /dev/null 2>&1 &
+		draw_spinner $! "Limpiando"
+
+		sudo apt update > /dev/null 2>&1 &
+		draw_spinner $! "Actualizando"
+
+		draw_separator
+		sudo apt install code > /dev/null 2>&1 &
+		draw_spinner $! "Instalando"
+
+		draw_separator
+		sleep 3 &
+		draw_spinner $! "¡Listo!"
 	}
 
 	install_dotfiles(){
@@ -390,6 +411,7 @@ EOF
 	}
 
 ### Main menu
+
 	main(){
 		while [ true ]; do
 			draw_header "Instalador de SWAY"
@@ -447,6 +469,7 @@ EOF
 				draw_header "Saliendo..."
 				sys_exit
 			else
+				draw_header "Opcion no valida"
 				sys_invalid
 			fi
 			sleep 2
@@ -454,18 +477,19 @@ EOF
 	}
 
 ### MAIN ###
+
 draw_header "Verificando..."
 printf "║                                                  ║\n"
 
-sleep 0.5 &
+sleep 0.2 &
 draw_spinner $! "Verificando permisos de sudo..."
 ver_sudo
 
-sleep 0.5 &
+sleep 0.2 &
 draw_spinner $! "Verificando distribución..."
 ver_distro
 
-sleep 0.5 &
+sleep 0.2 &
 draw_spinner $! "Creando carpetas de usuario..."
 sys_mkDir
 
