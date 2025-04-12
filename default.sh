@@ -13,7 +13,6 @@ deb-src http://deb.debian.org/debian/ stable main contrib non-free-firmware
 
 deb http://security.debian.org/debian-security stable-security main non-free-firmware
 deb-src http://security.debian.org/debian-security stable-security main non-free-firmware
-
 EOF
 }
 
@@ -37,6 +36,7 @@ EOF
 		playerctl
 		zip
 		unzip
+		grim
 	)
 	arch_paquetes=(
 		sway
@@ -203,19 +203,27 @@ EOF
 ### Update
 
 	update_debian() {
-		# Configurar los repositorios para testing
-		printf "║    Este script migrará tu sistema Debian a       ║\n"
-		printf "║    a versión 'testing'                           ║\n"
-		printf "║                                                  ║\n"
-		printf "║                                                  ║\n"
-		draw_footer
-		printf "\033[F"
-		read -p "║    ¿Deseas continuar? (s/n): " respuesta
+		printf "║                ${1}                                    ║\n"
+		if [ $1 -eq 1 ] ; then
 
-		if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
-			printf "\033[F║    Operación cancelada                           ║\n"
+			printf "║    Este script migrara tu sistema Debian a       ║\n"
+			printf "║    a version 'testing'                           ║\n"
+			printf "║                                                  ║\n"
+			printf "║    NO RECOMENDADO SI YA REALIZO LA INSTALACION   ║\n"
+			printf "║    DE SWAY.                                      ║\n"
+			printf "║                                                  ║\n"
+			printf "║    De ser asi mantengase en la version STABLE    ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+
 			draw_footer
-			return
+			printf "\033[F"
+			read -p "║    ¿Deseas continuar? (s/n): " respuesta
+			if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
+				printf "\033[F║    Operación cancelada                           ║\n"
+				draw_footer
+				return
+			fi
 		fi
 
 		# Hacer un respaldo del archivo sources.list
@@ -373,11 +381,11 @@ EOF
 
 	update(){
 		if [ "$DISTRO" == "Debian" ]; then
-			update_debian
+			update_debian 1
 		elif [ "$DISTRO" == "Arch" ]; then
-			update_arch
+			update_arch 1
 		elif [ "$DISTRO" == "Fedora" ]; then
-			update_fedora
+			update_fedora 1
 		fi
 	}
 
