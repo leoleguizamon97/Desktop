@@ -364,24 +364,24 @@ EOF
 	install_vscode(){
 		printf "║                                                  ║\n"
 		apt install -y wget gpg apt-transport-https > /dev/null 2>&1 &
-		draw_spinner $! "Instalando dependencias"
+		#draw_spinner $! "Instalando dependencias"
 		
-		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg &
-		install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-		draw_spinner $! "Descargando clave"
+		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg 
+		install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg 
+		#draw_spinner $! "Descargando clave"
 		
-		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null 2>&1 &
-		draw_spinner $! "Agregando repositorio"
+		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list
+		#draw_spinner $! "Agregando repositorio"
 		
-		rm -f packages.microsoft.gpg > /dev/null 2>&1 &
-		draw_spinner $! "Limpiando"
+		rm -f packages.microsoft.gpg
+		#draw_spinner $! "Limpiando"
 
-		apt update > /dev/null 2>&1 &
+		apt update
 		draw_spinner $! "Actualizando"
 
 		draw_separator
-		apt install -y code > /dev/null 2>&1 &
-		draw_spinner $! "Instalando"
+		apt install -y code 
+		#draw_spinner $! "Instalando"
 
 		draw_separator
 		sleep 3 &
