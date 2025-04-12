@@ -85,8 +85,8 @@ EOF
 			for ((i=0; i<${#spinstr}; i++)); do
 				printf "\033[F"							#Vuelve a linea anterior y limpia \033[2K
 				printf "\r║ %.43s %$(( ${#2} < 43 ? 43 - ${#2} : 1))s [%s] ║\n" "$2" "" "${spinstr:i:1}"
-				sleep "$delay"
 				draw_footer
+				sleep "$delay"
 			done
 		done
 		printf "\033[F"
@@ -116,7 +116,7 @@ EOF
 			centro+=" "
 		done
 
-		printf "╔" && printf "═%.0s" {1..10} && printf "%.30s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
+		printf "╔" && printf "═%.0s" {1..10} && printf "%.31s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
 		printf "║" && printf "%50s" && printf "║\n"
 	}
 
@@ -145,9 +145,9 @@ EOF
 			DISTRO="Ubuntu"
 		elif [ -f /etc/debian_version ]; then
 			DISTRO="Debian"
+		elif [ -f /etc/fedora-release ]; then
+			DISTRO="Fedora"
 		else
-			draw_header
-			printf "║                                                  ║\n"
 			printf "║    No se pudo determinar la distribución         ║\n"
 			draw_footer
 			return 1
@@ -157,11 +157,8 @@ EOF
 	}
 
 	no_valida(){
-		draw_header
-		printf "║                                                  ║\n"
 		printf "║    Opcion no valida                              ║\n"
 		draw_footer
-		sleep 2
 	}
 
 	salir(){
@@ -230,6 +227,7 @@ EOF
 		printf "║    Migración a Debian 'testing' completada       ║\n"
 		printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
 		printf "║                                                  ║\n"
+
 		draw_footer
 	}
 
@@ -255,7 +253,7 @@ EOF
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
 		cd /home/"$SUDO_USER"/Downloads
 		if [ -f "/home/"$SUDO_USER"/Downloads/Hasklig.zip" ]; then
-			sleep 3 2>&1 &
+			sleep 3 &
 			draw_spinner "$pid" "Fuentes ya descargadas!"
 		else
 			sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null 2>&1 &
@@ -275,37 +273,46 @@ EOF
 ### FUNCIONES PENDIENTES ###
 
 	sway_deb_install(){
+		# Función para mostrar un separador
+		draw_separator(){
+			printf "\033[F"
+			printf "╠══════════════════════════════════════════════════╣\n"
+			printf "║                                                  ║\n"
+		}
+
 		# Función para verificar si un paquete está disponible en los repositorios
 		check_and_install() {
 			if apt-cache policy "$1" | grep -q "Candidate:"; then
-				printf "║    El paquete '$1' está disponible               ║\n"
-				apt install -y "$1" > /dev/null 2>&1
+				apt install -y "$1" > /dev/null 2>&1 &
 				pid=$!
 				draw_spinner "$pid" "Instalando $1"
 			else
-				printf "║                                                  ║\n"
-				printf "║    El paquete '$1' NO está disponible        [x] ║\n"
-				sleep 1
+				sleep 1 &
+				pid=$!
+				draw_spinner "$pid" "No disponible $1"
 			fi
 		}
 
 		# Actualizar repositorios
-		apt update > /dev/null 2>&1
+		printf "║                                                  ║\n"
+		apt update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando lista de paquetes"
-
+		
 		# Verificar e instalar los paquetes disponibles
+		draw_separator
 		for paquete in "${deb_paquetes[@]}"; do
 			check_and_install "$paquete"
 		done
 
 		# Descargar configuración de sway
-		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1
+		draw_separator
+		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
 		draw_spinner $! "Descargando configuración de Sway"
-		sleep 5
 
-		# Mover bg a la carpeta de sway
-		sudo -u "$SUDO_USER" mv /home/"$SUDO_USER"/Desktop/bg.png /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1
-		draw_spinner $! "Moviendo bgs a la carpeta de sway"
+		# Aviso
+		draw_separator
+		sleep 5 &
+		draw_spinner "$!" "¡Se recomienda reiniciar el sistema!"
 	}
 
 	sway_arch_install(){
@@ -370,10 +377,10 @@ EOF
 			printf "║                                                  ║\n"
 			draw_footer
 			printf "\033[F\033[F"
-			read -p "║     Selecciona opcion: " opcion 
-
+			read -p "║     Selecciona opcion: " opcion
+			TITLE="Opción: ${opcion}"
+			draw_header
 			if [ "$opcion" == "1" ]; then
-				draw_header
 				if [ "$DISTRO" == "Debian" ]; then
 					sway_deb_install
 				elif [ "$DISTRO" == "Arch" ]; then
@@ -381,39 +388,28 @@ EOF
 				elif [ "$DISTRO" == "Ubuntu" ]; then
 					sway_ubuntu_install
 				fi
-				sleep 5
 			elif [ "$opcion" == "2" ]; then
-				draw_header
-				actualizar_dotfiles
-				sleep 5
+				install_dotfiles
 			elif [ "$opcion" == "3" ]; then
-				draw_header
-				sleep 5
+				draw_footer
 			elif [ "$opcion" == "4" ]; then
-				draw_header
-				sleep 5
+				draw_footer
 			elif [ "$opcion" == "5" ]; then
-				draw_header
-				sleep 5
+				actualizar_debian
 			elif [ "$opcion" == "6" ]; then
-				draw_header
-				sleep 5
+				install_vscode
 			elif [ "$opcion" == "7" ]; then
-				draw_header
-				sleep 5
+				install_browser
 			elif [ "$opcion" == "8" ]; then
-				draw_header
 				install_fonts
-				sleep 5
 			elif [ "$opcion" == "9" ]; then
-				draw_header
 				reiniciar
 			elif [ "$opcion" == "0" ]; then
-				draw_header
 				salir
 			else
 				no_valida
 			fi
+			sleep 2
 		done
 	}
 
