@@ -372,9 +372,13 @@ EOF
 	}
 
 	update(){
-		printf "║    Actualizando el sistema                       ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
+		if [ "$DISTRO" == "Debian" ]; then
+			update_debian
+		elif [ "$DISTRO" == "Arch" ]; then
+			update_arch
+		elif [ "$DISTRO" == "Fedora" ]; then
+			update_fedora
+		fi
 	}
 
 ### Main menu
