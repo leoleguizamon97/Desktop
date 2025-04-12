@@ -370,8 +370,7 @@ EOF
 		install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg &
 		draw_spinner $! "Descargando clave"
 		
-		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |
-		sudo tee /etc/apt/sources.list.d/vscode.list &
+		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null 2>&1 &
 		draw_spinner $! "Agregando repositorio"
 		
 		rm -f packages.microsoft.gpg &
@@ -385,7 +384,7 @@ EOF
 		draw_spinner $! "Instalando"
 
 		draw_separator
-		sleep 3 &
+		sleep 2 &
 		draw_spinner $! "¡Listo!"
 	}
 
