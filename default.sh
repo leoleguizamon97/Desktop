@@ -8,8 +8,8 @@ cat <<EOF >/etc/apt/sources.list
 deb http://deb.debian.org/debian testing main contrib non-free
 deb-src http://deb.debian.org/debian testing main contrib non-free
 
-deb http://deb.debian.org/debian/ stable main non-free-firmware
-deb-src http://deb.debian.org/debian/ stable main non-free-firmware
+deb http://deb.debian.org/debian/ stable main contrib non-free-firmware
+deb-src http://deb.debian.org/debian/ stable main contrib non-free-firmware
 
 deb http://security.debian.org/debian-security stable-security main non-free-firmware
 deb-src http://security.debian.org/debian-security stable-security main non-free-firmware
@@ -21,9 +21,8 @@ EOF
 
 	TAB='$\t'
 	TAB_SIZE='\t'
-	TITLE="Instalador de SWAY"
 	DISTRO=""
-	# Lista de paquetes a verificar
+
 	deb_paquetes=(
 		xwayland
 		network-manager
@@ -62,7 +61,21 @@ EOF
 		zoxide
 		imagemagick
 	)
-### Funciones TERMINADAS ###
+	fedora_paquetes=(
+		sway
+		swaybg
+		swayidle
+		swaylock
+		wofi
+		brightnessctl
+		pipewire
+		playerctl
+	)
+
+### FUNCIONES ###
+
+### Verificar
+
 	ver_sudo() {
 		if [ "$EUID" -ne 0 ]; then
 			clear
@@ -76,6 +89,21 @@ EOF
 			exit 1
 		fi
 	}
+
+	ver_distro(){
+		if [ -f /etc/arch-release ]; then
+			DISTRO="Arch"
+		elif [ -f /etc/debian_version ]; then
+			DISTRO="Debian"
+		elif [ -f /etc/fedora-release ]; then
+			DISTRO="Fedora"
+		else
+			draw_error "No se pudo determinar la distro"
+			exit 1
+		fi
+	}
+
+### Dibujar 
 
 	draw_spinner() {
 		local pid=$1
@@ -98,10 +126,10 @@ EOF
 		ancho=30
 		largoTitulo=0
 
-		if [[ ${#TITLE}%2 == 0 ]]; then
-			largoTitulo=${#TITLE}
+		if [[ ${#1}%2 == 0 ]]; then
+			largoTitulo=${#1}
 		else
-			largoTitulo=${#TITLE}+1
+			largoTitulo=${#1}+1
 		fi
 
 		borde=$(( ($ancho - $largoTitulo) / 2 ))
@@ -111,12 +139,12 @@ EOF
 			centro+=" "
 		done
 
-		centro+="$TITLE"
+		centro+="$1"
 		for i in $(seq 1 $borde); do
 			centro+=" "
 		done
 
-		printf "╔" && printf "═%.0s" {1..10} && printf "%.31s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
+		printf "╔" && printf "═%.0s" {1..10} && printf "%.30s" "$centro" && printf "═%.0s" {1..10} && printf "╗\n"
 		printf "║" && printf "%50s" && printf "║\n"
 	}
 
@@ -124,9 +152,43 @@ EOF
 		printf "╚" && printf "═%.0s" {1..34} && printf "leoleguizamon97═╝"
 	}
 
-	mk_directorios(){
+	draw_error(){
+		printf "\033[F"
+		printf "║ %.37s %$((37 > ${#1} ? 37 - ${#1} : 1))s %s ║\n\n" "$1" "" "Error [x]"
+		sleep 1 &
+		draw_spinner $! "Saliendo..."
+		exit 1
+	}
+
+### Sistema
+
+	sys_exit(){
+		printf "║                                                  ║\n"
+		sleep 1 &
+		draw_spinner $! "Adios!"
+		exit 0
+	}
+
+	sys_reboot(){
+		printf "\n"
+		for i in {5..1}; do
+			printf "\033[F║      Reiniciando el sistema en: $i!               ║\n"
+			draw_footer
+			sleep 1
+		done
+		sleep 2 &
+		draw_spinner $! "Adios!"
+		reboot now
+	}
+
+	sys_invalid(){
+		printf "║    Opcion no valida                              ║\n"
+		draw_footer
+	}
+
+	sys_mkDir(){
 		# Crear directorios como usuario regular
-		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/sway > /dev/null
+		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/.config/ > /dev/null
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/Downloads > /dev/null
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/Desktop > /dev/null
 		sudo -u "$SUDO_USER" mkdir -p /home/"$SUDO_USER"/Documents > /dev/null
@@ -138,49 +200,9 @@ EOF
 		mkdir -p /usr/local/share/fonts
 	}
 
-	ver_distro(){
-		if [ -f /etc/arch-release ]; then
-			DISTRO="Arch"
-		elif [ -f /etc/lsb-release ]; then
-			DISTRO="Ubuntu"
-		elif [ -f /etc/debian_version ]; then
-			DISTRO="Debian"
-		elif [ -f /etc/fedora-release ]; then
-			DISTRO="Fedora"
-		else
-			printf "║    No se pudo determinar la distribución         ║\n"
-			draw_footer
-			return 1
-		fi
-		return 0
-		sleep 2
-	}
+### Update
 
-	no_valida(){
-		printf "║    Opcion no valida                              ║\n"
-		draw_footer
-	}
-
-	salir(){
-		printf "║                                                  ║\n"
-		sleep 1 &
-		draw_spinner "$!" "Adios!"
-		exit 0
-	}
-
-	reiniciar(){
-		printf "\n"
-		for i in {5..1}; do
-			printf "\033[F║      Reiniciando el sistema en: $i!               ║\n"
-			draw_footer
-			sleep 1
-		done
-		sleep 2 &
-		draw_spinner "$!" "Adios!"
-		reboot now
-	}
-
-	actualizar_debian() {
+	update_debian() {
 		# Configurar los repositorios para testing
 		printf "║    Este script migrará tu sistema Debian a       ║\n"
 		printf "║    a versión 'testing'                           ║\n"
@@ -198,24 +220,23 @@ EOF
 
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1 &
-		draw_spinner "$!" "Haciendo respaldo de sources.list"
+		draw_spinner $! "Haciendo respaldo de sources.list"
 
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1 &
-		draw_spinner "$!" "Configurando los repositorios"
+		draw_spinner $! "Configurando los repositorios"
 
 		# Actualizar lista de paquetes
 		apt update -y > /dev/null 2>&1 &
-		pid=$!
-		draw_spinner "$pid" "Actualizando la lista de paquetes"
+		draw_spinner $! "Actualizando la lista de paquetes"
 
 		# Fix broken packages
 		apt --fix-broken install -y > /dev/null 2>&1 &
-		draw_spinner "$!" "Fixing broken packages"
+		draw_spinner $! "Fixing broken packages"
 
 		# Actualizar el sistema a testing
 		apt full-upgrade -y > /dev/null 2>&1 &
-		draw_spinner "$!" "Actualizando el sistema"
+		draw_spinner $! "Actualizando el sistema"
 
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1 &
@@ -231,48 +252,55 @@ EOF
 		draw_footer
 	}
 
-	install_fonts(){
+### Install
 
-		printf "║    Instalando fuente Nerd Font Hasklig           ║\n"
+	install_fonts(){
 		printf "║                                                  ║\n"
-		printf "║                                                  ║\n"
-		# Verificar 7z
+		# Verificar zip
 		if [ "$DISTRO" == "Debian" ]; then
 			apt install -y zip > /dev/null 2>&1 &
 			pid=$!
-			draw_spinner "$pid" "Instalando p7zip"
 		elif [ "$DISTRO" == "Arch" ]; then
-			pacman -S p7zip > /dev/null 2>&1 &
+			pacman -S zip > /dev/null 2>&1 &
 			pid=$!
-			draw_spinner "$pid" "Instalando zip"
-		elif [ "$DISTRO" == "Ubuntu" ]; then
-			apt install -y zip > /dev/null 2>&1 &
+		elif [ "$DISTRO" == "Fedora" ]; then
+			dnf install -y zip > /dev/null 2>&1 &
 			pid=$!
-			draw_spinner "$pid" "Instalando zip"
 		fi
+		draw_spinner "$pid" "Instalando zip"
+		
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
 		cd /home/"$SUDO_USER"/Downloads
 		if [ -f "/home/"$SUDO_USER"/Downloads/Hasklig.zip" ]; then
-			sleep 3 &
-			draw_spinner "$pid" "Fuentes ya descargadas!"
+			sleep 1 &
+			draw_spinner $! "Fuentes ya descargadas!"
 		else
 			sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null 2>&1 &
-				pid=$!
-				draw_spinner "$pid" "Descargando Nerdfont Hasklig"
+				draw_spinner $! "Descargando Nerdfont Hasklig"
 		fi
+		
 		sudo unzip Hasklig.zip /usr/local/share/fonts > /dev/null 2>&1 &
-			pid=$!
-			draw_spinner "$pid" "Descomprimiendo Nerdfont Hasklig"
+		draw_spinner $! "Descomprimiendo Nerdfont Hasklig"
+		
 		fc-cache -fv > /dev/null 2>&1 &
-			# draw_spinner
-			pid=$!
-			draw_spinner "$pid" "Actualizando caché de fuentes"
+		draw_spinner $! "Actualizando caché de fuentes"
+		
 		chmod -R 755 /usr/local/share/fonts > /dev/null
+	}
+
+	install_sway(){
+		if [ "$DISTRO" == "Debian" ]; then
+			install_sway_deb
+		elif [ "$DISTRO" == "Arch" ]; then
+			install_sway_arch
+		elif [ "$DISTRO" == "Fedora" ]; then
+			install_sway_fedora
+		fi
 	}
 
 ### FUNCIONES PENDIENTES ###
 
-	sway_deb_install(){
+	install_sway_deb(){
 		# Función para mostrar un separador
 		draw_separator(){
 			printf "\033[F"
@@ -284,12 +312,10 @@ EOF
 		check_and_install() {
 			if apt-cache policy "$1" | grep -q "Candidate:"; then
 				apt install -y "$1" > /dev/null 2>&1 &
-				pid=$!
-				draw_spinner "$pid" "Instalando $1"
+				draw_spinner $! "Instalando $1"
 			else
 				sleep 1 &
-				pid=$!
-				draw_spinner "$pid" "No disponible $1"
+				draw_spinner $! "No disponible $1"
 			fi
 		}
 
@@ -312,60 +338,61 @@ EOF
 		# Aviso
 		draw_separator
 		sleep 5 &
-		draw_spinner "$!" "¡Se recomienda reiniciar el sistema!"
+		draw_spinner $! "¡Se recomienda reiniciar el sistema!"
 	}
 
-	sway_arch_install(){
+	install_sway_arch(){
 		printf "║    Instalando sway y sus dependencias            ║\n"
 		sleep 5 & 
-		draw_spinner "$!" "Not yet implemented"
+		draw_spinner $! "Not yet implemented"
 	}
 	
-	sway_ubuntu_install(){
+	install_sway_fedora(){
 		printf "║    Instalando sway y sus dependencias            ║\n"
 		sleep 5 & 
-		draw_spinner "$!" "Not yet implemented"
+		draw_spinner $! "Not yet implemented"
 	}
 
 	install_vscode(){
 		printf "║    Instalando VSCode                             ║\n"
 		sleep 5 & 
-		draw_spinner "$!" "Not yet implemented"
+		draw_spinner $! "Not yet implemented"
 	}
 
 	install_dotfiles(){
 		printf "║    Instalando dotfiles                           ║\n"
 		sleep 5 & 
-		draw_spinner "$!" "Not yet implemented"
+		draw_spinner $! "Not yet implemented"
 	}
 
 	install_browser(){
 		printf "║    Instalando Browser                            ║\n"
 		sleep 5 & 
-		draw_spinner "$!" "Not yet implemented"
+		draw_spinner $! "Not yet implemented"
 	}
 
+	update(){
+		printf "║    Actualizando el sistema                       ║\n"
+		sleep 5 & 
+		draw_spinner $! "Not yet implemented"
+	}
 
-	# Ciclo principal
+### Main menu
 	main(){
 		while [ true ]; do
-			draw_header
-			printf "║      Elige el modo de instalación:               ║\n"
+			draw_header "Instalador de SWAY"
+			printf "║      Selecciona una opcion:                      ║\n"
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
-			printf "║     ║                                     ║      ║\n"
 			printf "║     ║ 1. Configurar Sway/Apps             ║      ║\n"
-			printf "║     ║ 2. Actualizar dotfiles              ║      ║\n"
-			if [ "$DISTRO" == "Debian" ]; then
-			printf "║     ║                                     ║      ║\n"
-			printf "║     ║ 5. Actualizar Debian a 'testing'    ║      ║\n"
-			fi
+			printf "║     ║ 2. Configurar dotfiles              ║      ║\n"
+			printf "║     ║ 3. Configurar nuevos repositorios   ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
-			printf "║     ║                                     ║      ║\n"
+			printf "║     ║ 4. ??????                           ║      ║\n"
+			printf "║     ║ 5. ??????                           ║      ║\n"
 			printf "║     ║ 6. Instalar VS Code                 ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
 			printf "║     ║ 8. Instalar NerdFont Hasklig        ║      ║\n"
-			printf "║     ║                                     ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 9. Reiniciar el sistema             ║      ║\n"
 			printf "║     ║ 0. Salir                            ║      ║\n"
@@ -374,51 +401,61 @@ EOF
 			printf "║     %.40s %*s ║\n" "$DISTRO" $(( ${#DISTRO} < 43 ? 43 - ${#DISTRO} : 3  )) ""
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
-			printf "║                                                  ║\n"
 			draw_footer
 			printf "\033[F\033[F"
 			read -p "║     Selecciona opcion: " opcion
-			TITLE="Opción: ${opcion}"
-			draw_header
 			if [ "$opcion" == "1" ]; then
-				if [ "$DISTRO" == "Debian" ]; then
-					sway_deb_install
-				elif [ "$DISTRO" == "Arch" ]; then
-					sway_arch_install
-				elif [ "$DISTRO" == "Ubuntu" ]; then
-					sway_ubuntu_install
-				fi
+				draw_header "Instalando Escritorio Sway"
+				install_sway
 			elif [ "$opcion" == "2" ]; then
+				draw_header "Descargar dotfiles"
 				install_dotfiles
 			elif [ "$opcion" == "3" ]; then
-				draw_footer
+				draw_header "Actualizando Repos $DISTRO"
+				update
 			elif [ "$opcion" == "4" ]; then
+				draw_header "???"
 				draw_footer
 			elif [ "$opcion" == "5" ]; then
-				actualizar_debian
+				draw_header "???"
+				draw_footer
 			elif [ "$opcion" == "6" ]; then
+				draw_header "Instalando VSCode"
 				install_vscode
 			elif [ "$opcion" == "7" ]; then
+				draw_header "Instalando Navegador"
 				install_browser
 			elif [ "$opcion" == "8" ]; then
+				draw_header "Instalando NerdFont Hasklig"
 				install_fonts
 			elif [ "$opcion" == "9" ]; then
-				reiniciar
+				draw_header "Reiniciando el sistema"
+				sys_reboot
 			elif [ "$opcion" == "0" ]; then
-				salir
+				draw_header "Saliendo..."
+				sys_exit
 			else
-				no_valida
+				sys_invalid
 			fi
 			sleep 2
 		done
 	}
 
-leo="leoleguizamon97"
-echo ${#leo}
-
 ### MAIN ###
+draw_header "Verificando..."
+printf "║                                                  ║\n"
+
+sleep 0.5 &
+draw_spinner $! "Verificando permisos de sudo..."
 ver_sudo
-draw_header
+
+sleep 0.5 &
+draw_spinner $! "Verificando distribución..."
 ver_distro
-mk_directorios
+
+sleep 0.5 &
+draw_spinner $! "Creando carpetas de usuario..."
+sys_mkDir
+
+sleep 1
 main
