@@ -8,11 +8,12 @@ cat <<EOF >/etc/apt/sources.list
 deb http://deb.debian.org/debian testing main contrib non-free
 deb-src http://deb.debian.org/debian testing main contrib non-free
 
-deb http://security.debian.org/debian-security testing-security main contrib non-free
-deb-src http://security.debian.org/debian-security testing-security main contrib non-free
+deb http://deb.debian.org/debian/ stable main non-free-firmware
+deb-src http://deb.debian.org/debian/ stable main non-free-firmware
 
-deb http://deb.debian.org/debian testing-updates main contrib non-free
-deb-src http://deb.debian.org/debian testing-updates main contrib non-free
+deb http://security.debian.org/debian-security stable-security main non-free-firmware
+deb-src http://security.debian.org/debian-security stable-security main non-free-firmware
+
 EOF
 }
 
@@ -20,21 +21,23 @@ EOF
 
 	TAB='$\t'
 	TAB_SIZE='\t'
-	TITLE="Instalador de Sway"
+	TITLE="Instalador de SWAY"
 	DISTRO=""
 	# Lista de paquetes a verificar
 	deb_paquetes=(
+		xwayland
+		network-manager
+		curl
 		sway
 		swaybg
 		swayidle
 		swaylock
-		swaync
 		wofi
 		brightnessctl
 		pipewire
 		playerctl
-		firefox-esr
-		p7zip-full
+		zip
+		unzip
 	)
 	arch_paquetes=(
 		sway
@@ -74,7 +77,7 @@ EOF
 		fi
 	}
 
-	spinner() {
+	draw_spinner() {
 		local pid=$1
 		local delay=0.1
 		local spinstr='|/-\'
@@ -156,7 +159,7 @@ EOF
 	no_valida(){
 		draw_header
 		printf "║                                                  ║\n"
-		printf "║    Opcion no valida                             ║\n"
+		printf "║    Opcion no valida                              ║\n"
 		draw_footer
 		sleep 2
 	}
@@ -164,7 +167,7 @@ EOF
 	salir(){
 		printf "║                                                  ║\n"
 		sleep 1 &
-		spinner "$!" "Adios!"
+		draw_spinner "$!" "Adios!"
 		exit 0
 	}
 
@@ -175,8 +178,8 @@ EOF
 			draw_footer
 			sleep 1
 		done
-		printf "\033\033[2K[F║      Bye!                                         ║\n"
-		sleep 2
+		sleep 2 &
+		draw_spinner "$!" "Adios!"
 		reboot now
 	}
 
@@ -198,28 +201,28 @@ EOF
 
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1 &
-		spinner "$!" "Haciendo respaldo de sources.list"
+		draw_spinner "$!" "Haciendo respaldo de sources.list"
 
 		# Configurar los repositorios para testing
 		deb_file > /dev/null 2>&1 &
-		spinner "$!" "Configurando los repositorios"
+		draw_spinner "$!" "Configurando los repositorios"
 
 		# Actualizar lista de paquetes
 		apt update -y > /dev/null 2>&1 &
 		pid=$!
-		spinner "$pid" "Actualizando la lista de paquetes"
+		draw_spinner "$pid" "Actualizando la lista de paquetes"
 
 		# Fix broken packages
 		apt --fix-broken install -y > /dev/null 2>&1 &
-		spinner "$!" "Fixing broken packages"
+		draw_spinner "$!" "Fixing broken packages"
 
 		# Actualizar el sistema a testing
 		apt full-upgrade -y > /dev/null 2>&1 &
-		spinner "$!" "Actualizando el sistema"
+		draw_spinner "$!" "Actualizando el sistema"
 
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1 &
-		spinner $! "Eliminando paquetes obsoletos"
+		draw_spinner $! "Eliminando paquetes obsoletos"
 
 		# Completado
 		printf "\033[F"
@@ -230,42 +233,42 @@ EOF
 		draw_footer
 	}
 
-	fonts_install(){
+	install_fonts(){
 
 		printf "║    Instalando fuente Nerd Font Hasklig           ║\n"
 		printf "║                                                  ║\n"
 		printf "║                                                  ║\n"
 		# Verificar 7z
 		if [ "$DISTRO" == "Debian" ]; then
-			apt install -y p7zip-full > /dev/null 2>&1 &
+			apt install -y zip > /dev/null 2>&1 &
 			pid=$!
-			spinner "$pid" "Instalando p7zip-full"
+			draw_spinner "$pid" "Instalando p7zip"
 		elif [ "$DISTRO" == "Arch" ]; then
 			pacman -S p7zip > /dev/null 2>&1 &
 			pid=$!
-			spinner "$pid" "Instalando p7zip-full"
+			draw_spinner "$pid" "Instalando zip"
 		elif [ "$DISTRO" == "Ubuntu" ]; then
-			apt install -y p7zip-full > /dev/null 2>&1 &
+			apt install -y zip > /dev/null 2>&1 &
 			pid=$!
-			spinner "$pid" "Instalando p7zip-full"
+			draw_spinner "$pid" "Instalando zip"
 		fi
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
 		cd /home/"$SUDO_USER"/Downloads
 		if [ -f "/home/"$SUDO_USER"/Downloads/Hasklig.zip" ]; then
 			sleep 3 2>&1 &
-			spinner "$pid" "Fuentes ya descargadas!"
+			draw_spinner "$pid" "Fuentes ya descargadas!"
 		else
 			sudo -u "$SUDO_USER" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hasklig.zip > /dev/null 2>&1 &
 				pid=$!
-				spinner "$pid" "Descargando Nerdfont Hasklig"
+				draw_spinner "$pid" "Descargando Nerdfont Hasklig"
 		fi
-		sudo 7z x Hasklig.zip -o/usr/local/share/fonts > /dev/null 2>&1 &
+		sudo unzip Hasklig.zip /usr/local/share/fonts > /dev/null 2>&1 &
 			pid=$!
-			spinner "$pid" "Descomprimiendo Nerdfont Hasklig"
+			draw_spinner "$pid" "Descomprimiendo Nerdfont Hasklig"
 		fc-cache -fv > /dev/null 2>&1 &
-			# Spinner
+			# draw_spinner
 			pid=$!
-			spinner "$pid" "Actualizando caché de fuentes"
+			draw_spinner "$pid" "Actualizando caché de fuentes"
 		chmod -R 755 /usr/local/share/fonts > /dev/null
 	}
 
@@ -278,7 +281,7 @@ EOF
 				printf "║    El paquete '$1' está disponible               ║\n"
 				apt install -y "$1" > /dev/null 2>&1
 				pid=$!
-				spinner "$pid" "Instalando $1"
+				draw_spinner "$pid" "Instalando $1"
 			else
 				printf "║                                                  ║\n"
 				printf "║    El paquete '$1' NO está disponible        [x] ║\n"
@@ -288,7 +291,7 @@ EOF
 
 		# Actualizar repositorios
 		apt update > /dev/null 2>&1
-		spinner $! "Actualizando lista de paquetes"
+		draw_spinner $! "Actualizando lista de paquetes"
 
 		# Verificar e instalar los paquetes disponibles
 		for paquete in "${deb_paquetes[@]}"; do
@@ -297,25 +300,44 @@ EOF
 
 		# Descargar configuración de sway
 		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1
-		spinner $! "Descargando configuración de Sway"
+		draw_spinner $! "Descargando configuración de Sway"
 		sleep 5
 
 		# Mover bg a la carpeta de sway
 		sudo -u "$SUDO_USER" mv /home/"$SUDO_USER"/Desktop/bg.png /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1
-		spinner $! "Moviendo bgs a la carpeta de sway"
+		draw_spinner $! "Moviendo bgs a la carpeta de sway"
 	}
 
 	sway_arch_install(){
 		printf "║    Instalando sway y sus dependencias            ║\n"
 		sleep 5 & 
-		spinner "$!" "Not yet implemented"
+		draw_spinner "$!" "Not yet implemented"
 	}
 	
 	sway_ubuntu_install(){
 		printf "║    Instalando sway y sus dependencias            ║\n"
 		sleep 5 & 
-		spinner "$!" "Not yet implemented"
+		draw_spinner "$!" "Not yet implemented"
 	}
+
+	install_vscode(){
+		printf "║    Instalando VSCode                             ║\n"
+		sleep 5 & 
+		draw_spinner "$!" "Not yet implemented"
+	}
+
+	install_dotfiles(){
+		printf "║    Instalando dotfiles                           ║\n"
+		sleep 5 & 
+		draw_spinner "$!" "Not yet implemented"
+	}
+
+	install_browser(){
+		printf "║    Instalando Browser                            ║\n"
+		sleep 5 & 
+		draw_spinner "$!" "Not yet implemented"
+	}
+
 
 	# Ciclo principal
 	main(){
@@ -325,11 +347,17 @@ EOF
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
 			printf "║     ║                                     ║      ║\n"
-			printf "║     ║ 1. Instalar Sway/Apps               ║      ║\n"
+			printf "║     ║ 1. Configurar Sway/Apps             ║      ║\n"
 			printf "║     ║ 2. Actualizar dotfiles              ║      ║\n"
 			if [ "$DISTRO" == "Debian" ]; then
-			printf "║     ║ 3. Actualizar Debian a 'testing'    ║      ║\n"
+			printf "║     ║                                     ║      ║\n"
+			printf "║     ║ 5. Actualizar Debian a 'testing'    ║      ║\n"
 			fi
+			printf "║     ╠═════════════════════════════════════╣      ║\n"
+			printf "║     ║                                     ║      ║\n"
+			printf "║     ║ 6. Instalar VS Code                 ║      ║\n"	
+			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
+			printf "║     ║ 8. Instalar NerdFont Hasklig        ║      ║\n"
 			printf "║     ║                                     ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 9. Reiniciar el sistema             ║      ║\n"
@@ -360,15 +388,22 @@ EOF
 				sleep 5
 			elif [ "$opcion" == "3" ]; then
 				draw_header
-				if [ "$DISTRO" == "Debian" ]; then
-					actualizar_debian
-				else
-					no_valida
-				fi
+				sleep 5
+			elif [ "$opcion" == "4" ]; then
+				draw_header
+				sleep 5
+			elif [ "$opcion" == "5" ]; then
+				draw_header
+				sleep 5
+			elif [ "$opcion" == "6" ]; then
+				draw_header
+				sleep 5
+			elif [ "$opcion" == "7" ]; then
+				draw_header
 				sleep 5
 			elif [ "$opcion" == "8" ]; then
 				draw_header
-				fonts_install
+				install_fonts
 				sleep 5
 			elif [ "$opcion" == "9" ]; then
 				draw_header
@@ -379,7 +414,6 @@ EOF
 			else
 				no_valida
 			fi
-
 		done
 	}
 
