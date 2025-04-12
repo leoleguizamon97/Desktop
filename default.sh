@@ -279,7 +279,7 @@ EOF
 				draw_spinner $! "Descargando Nerdfont Hasklig"
 		fi
 		
-		sudo unzip Hasklig.zip /usr/local/share/fonts > /dev/null 2>&1 &
+		sudo unzip Hasklig.zip -d /usr/local/share/fonts/Hasklig > /dev/null 2>&1 &
 		draw_spinner $! "Descomprimiendo Nerdfont Hasklig"
 		
 		fc-cache -fv > /dev/null 2>&1 &
