@@ -363,11 +363,11 @@ EOF
 
 	install_vscode(){
 		printf "║                                                  ║\n"
-		sudo apt-get install wget gpg apt-transport-https > /dev/null 2>&1 &
+		apt install -y wget gpg apt-transport-https > /dev/null 2>&1 &
 		draw_spinner $! "Instalando dependencias"
 		
-		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg > /dev/null 2>&1 &
-		sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg &
+		install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
 		draw_spinner $! "Descargando clave"
 		
 		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null 2>&1 &
@@ -376,11 +376,11 @@ EOF
 		rm -f packages.microsoft.gpg > /dev/null 2>&1 &
 		draw_spinner $! "Limpiando"
 
-		sudo apt update > /dev/null 2>&1 &
+		apt update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando"
 
 		draw_separator
-		sudo apt install code > /dev/null 2>&1 &
+		apt install -y code > /dev/null 2>&1 &
 		draw_spinner $! "Instalando"
 
 		draw_separator
