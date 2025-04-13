@@ -209,9 +209,8 @@ EOF
 ### Update
 
 	update_debian() {
-		printf "║                ${1}                                    ║\n"
 		if [ $1 -eq 1 ] ; then
-
+			printf "║                                                  ║\n"
 			printf "║    Este script migrara tu sistema Debian a       ║\n"
 			printf "║    a version 'testing'                           ║\n"
 			printf "║                                                  ║\n"
@@ -363,8 +362,15 @@ EOF
 
 	install_vscode(){
 		printf "║                                                  ║\n"
-		apt install -y wget gpg apt-transport-https > /dev/null 2>&1 &
-		#draw_spinner $! "Instalando dependencias"
+		apt update > /dev/null 2>&1 &
+		draw_spinner $! "Actualizando lista de paquetes"
+
+		apt install -y wget > /dev/null 2>&1 &
+		draw_spinner $! "Instalando... wget"
+		apt install -y gpg > /dev/null 2>&1 &
+		draw_spinner $! "Instalando... gpg"
+		apt install -y apt-transport-https > /dev/null 2>&1 &
+		draw_spinner $! "Instalando... apt-transport-https"
 		
 		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg 
 		install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg &
