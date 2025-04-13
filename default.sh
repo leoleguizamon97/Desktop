@@ -25,6 +25,7 @@ EOF
 	DISTRO=""
 
 	deb_paquetes=(
+		btop
 		xwayland
 		network-manager
 		curl
@@ -530,6 +531,11 @@ EOF
 		fi
 		draw_space
 		draw_separator
+
+		# Instalar nerd fonts
+		install_fonts
+		draw_separator
+
 		# Actualizar repositorios
 		update 0
 		draw_separator
@@ -540,10 +546,6 @@ EOF
 		
 		# Instalar dotfiles
 		install_dotfiles
-		draw_separator
-		
-		# Instalar nerd fonts
-		install_fonts
 		draw_separator
 		
 		# Instalar VSCode
