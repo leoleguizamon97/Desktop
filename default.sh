@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+### Files ###
+
 deb_file(){
 # Configurar los repositorios para testing
 
@@ -188,7 +190,9 @@ EOF
 	}
 
 	sys_invalid(){
+		draw_header "Opcion no valida"
 		printf "║    Opcion no valida                              ║\n"
+		printf "║                                                  ║\n"
 		draw_footer
 	}
 
@@ -401,9 +405,46 @@ EOF
 	}
 
 	install_browser(){
-		printf "║    Instalando Browser                            ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
+		printf "║                                                  ║\n"
+		printf "║    Selecciona un navegador:                      ║\n"
+		printf "║                                                  ║\n"
+		printf "║     ╔═════════════════════════════════════╗      ║\n"
+		printf "║     ║ 1. Firefox                          ║      ║\n"
+		printf "║     ║ 2. Brave                            ║      ║\n"
+		printf "║     ╚═════════════════════════════════════╝      ║\n"
+		printf "║                                                  ║\n"
+		printf "║                                                  ║\n"
+
+		draw_footer
+		printf "\033[F\033[F"
+		read -p "║     Selecciona opcion: " opcion
+
+		if [ "$opcion" -eq 1 ]; then
+			draw_header "Instalando Firefox"
+			printf "║                                                  ║\n"
+			if [ "$DISTRO" == "Debian" ]; then
+				apt install -y firefox-esr > /dev/null 2>&1 &
+				pid=$!
+			elif [ "$DISTRO" == "Arch" ]; then
+				pacman -Sy firefox > /dev/null 2>&1 &
+				pid=$!
+			elif [ "$DISTRO" == "Fedora" ]; then
+				dnf install -y firefox > /dev/null 2>&1 &
+				pid=$!
+			else
+				draw_error "No se pudo determinar la distro"
+				exit 1
+			fi
+			draw_spinner $pid "Instalando Firefox"
+
+		elif [ "$opcion" -eq 2 ]; then
+			draw_header "Instalando Brave"
+			printf "║                                                  ║\n"
+			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
+			draw_spinner $! "Instalando Brave"
+		else
+			sys_invalid
+		fi
 	}
 
 	update(){
@@ -475,7 +516,6 @@ EOF
 				draw_header "Saliendo..."
 				sys_exit
 			else
-				draw_header "Opcion no valida"
 				sys_invalid
 			fi
 			sleep 2
