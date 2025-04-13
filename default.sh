@@ -163,9 +163,14 @@ EOF
 	}
 
 	draw_separator(){
-			printf "\033[F"
-			printf "╠══════════════════════════════════════════════════╣\n"
-			printf "║                                                  ║\n"
+		printf "\033[F"
+		printf "╠══════════════════════════════════════════════════╣\n"
+	}
+
+	draw_space(){
+		printf "\033[F"
+		printf "║                                                  ║\n"
+		printf "║                                                  ║\n"
 	}
 
 ### Sistema
@@ -190,8 +195,9 @@ EOF
 	}
 
 	sys_invalid(){
-		draw_header "Opcion no valida"
-		printf "║    Opcion no valida                              ║\n"
+
+		draw_header "Opcion no valida / Cancelado"
+		printf "║    La opcion no es valida o fue cancelada.       ║\n"
 		printf "║                                                  ║\n"
 		draw_footer
 	}
@@ -212,9 +218,18 @@ EOF
 
 ### Update
 
+	update(){
+		if [ "$DISTRO" == "Debian" ]; then
+			update_debian $1
+		elif [ "$DISTRO" == "Arch" ]; then
+			update_arch $1
+		elif [ "$DISTRO" == "Fedora" ]; then
+			update_fedora $1
+		fi
+	}
+
 	update_debian() {
 		if [ $1 -eq 1 ] ; then
-			printf "║                                                  ║\n"
 			printf "║    Este script migrara tu sistema Debian a       ║\n"
 			printf "║    a version 'testing'                           ║\n"
 			printf "║                                                  ║\n"
@@ -224,16 +239,18 @@ EOF
 			printf "║    De ser asi mantengase en la version STABLE    ║\n"
 			printf "║                                                  ║\n"
 			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
 
 			draw_footer
-			printf "\033[F"
+			printf "\033[F\033[F"
 			read -p "║    ¿Deseas continuar? (s/n): " respuesta
 			if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
-				printf "\033[F║    Operación cancelada                           ║\n"
-				draw_footer
+				sys_invalid
 				return
 			fi
 		fi
+		printf "║    Agregando repositorios                        ║\n"
+		printf "║                                                  ║\n"
 
 		# Hacer un respaldo del archivo sources.list
 		cp /etc/apt/sources.list /etc/apt/sources.list.bak > /dev/null 2>&1 &
@@ -260,19 +277,167 @@ EOF
 		draw_spinner $! "Eliminando paquetes obsoletos"
 
 		# Completado
-		printf "\033[F"
-		printf "║                                                  ║\n"
-		printf "║    Migración a Debian 'testing' completada       ║\n"
-		printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
-		printf "║                                                  ║\n"
+		if [ $1 -eq 1 ] ; then
+			printf "\033[F"
+			printf "║                                                  ║\n"
+			printf "║    Migración a Debian 'testing' completada       ║\n"
+			printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
+			printf "║                                                  ║\n"
 
-		draw_footer
+			draw_footer
+		fi
 	}
 
 ### Install
 
-	install_fonts(){
+	install_sway(){
+		printf "║    Instalando Entorno Sway                       ║\n"
 		printf "║                                                  ║\n"
+		
+		if [ "$DISTRO" == "Debian" ]; then
+			install_sway_deb $1
+		elif [ "$DISTRO" == "Arch" ]; then
+			install_sway_arch $1
+		elif [ "$DISTRO" == "Fedora" ]; then
+			install_sway_fedora $1
+		fi
+	}
+
+	install_sway_deb(){
+		# Función para verificar si un paquete está disponible en los repositorios
+		check_and_install() {
+			if apt-cache policy "$1" | grep -q "Candidate:"; then
+				apt install -y "$1" > /dev/null 2>&1 &
+				draw_spinner $! "Instalando $1"
+			else
+				sleep 1 &
+				draw_spinner $! "No disponible $1"
+			fi
+		}
+
+		# Actualizar repositorios
+		apt update > /dev/null 2>&1 &
+		draw_spinner $! "Actualizando lista de paquetes"
+		
+		# Verificar e instalar los paquetes disponibles
+		draw_space
+
+		for paquete in "${deb_paquetes[@]}"; do
+			check_and_install "$paquete"
+		done
+
+		# Aviso
+		if [ $1 -eq 1 ]; then
+			draw_space
+			sleep 5 &
+			draw_spinner $! "¡Se recomienda reiniciar el sistema!"
+		fi
+	}
+
+	install_browser(){
+		printf "║    Instalando navegador                          ║\n"
+		opcion=$1
+		if [ $1 -eq 0 ]; then
+			printf "║                                                  ║\n"
+			printf "║    Selecciona un navegador:                      ║\n"
+			printf "║                                                  ║\n"
+			printf "║     ╔═════════════════════════════════════╗      ║\n"
+			printf "║     ║ 1. Brave                            ║      ║\n"
+			printf "║     ║ 2. Firefox                          ║      ║\n"
+			printf "║     ╚═════════════════════════════════════╝      ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+			printf "║                                                  ║\n"
+
+			draw_footer
+			printf "\033[F\033[F"
+			read -p "║     Selecciona opcion: " opcion
+			printf "\033[F"
+			printf "║                                                  ║\n"
+		fi
+			printf "║                                                  ║\n"
+		if [ "$opcion" -eq 1 ]; then
+			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
+			draw_spinner $! "Instalando Brave"
+		elif [ "$opcion" -eq 2 ]; then
+			if [ "$DISTRO" == "Debian" ]; then
+				apt install -y firefox-esr > /dev/null 2>&1 &
+				pid=$!
+			elif [ "$DISTRO" == "Arch" ]; then
+				pacman -Sy firefox > /dev/null 2>&1 &
+				pid=$!
+			elif [ "$DISTRO" == "Fedora" ]; then
+				dnf install -y firefox > /dev/null 2>&1 &
+				pid=$!
+			else
+				draw_error "No se pudo determinar la distro"
+				exit 1
+			fi
+			draw_spinner $pid "Instalando Firefox"
+		else
+			sys_invalid
+		fi
+	}
+
+	install_vscode(){
+		printf "║    Instalando VSCode                             ║\n"
+		printf "║                                                  ║\n"
+
+		if [ "$DISTRO" == "Debian" ]; then
+			apt update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando lista de paquetes"
+
+			draw_space
+
+			apt install -y wget > /dev/null 2>&1 &
+			draw_spinner $! "Instalando... wget"
+			apt install -y gpg > /dev/null 2>&1 &
+			draw_spinner $! "Instalando... gpg"
+			apt install -y apt-transport-https > /dev/null 2>&1 &
+			draw_spinner $! "Instalando... apt-transport-https"
+			
+			wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg 
+			install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg &
+			draw_spinner $! "Descargando clave"
+			
+			echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null 2>&1 &
+			draw_spinner $! "Agregando repositorio"
+			
+			rm -f packages.microsoft.gpg &
+			draw_spinner $! "Limpiando"
+
+			apt update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando"
+
+			draw_space
+			
+			apt install -y code > /dev/null 2>&1 &
+			draw_spinner $! "Instalando VSCode"
+
+		elif [ "$DISTRO" == "Arch" ]; then
+			sleep 1 & 
+			draw_spinner $! "Not yet implemented"
+		elif [ "$DISTRO" == "Fedora" ]; then
+			sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc > /dev/null 2>&1 &
+			draw_spinner $! "Importando clave"
+			echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null 2>&1 &
+			draw_spinner $! "Agregando repositorio"
+
+			sudo dnf check-update > /dev/null 2>&1 &
+			draw_spinner $! "Actualizando"
+			sudo dnf install -y code > /dev/null 2>&1 &
+			draw_spinner $! "Instalando VSCode"
+		else
+			draw_error "No se pudo determinar la distro"
+			exit 1
+		fi
+	}
+
+	install_fonts(){
+		printf "║    Instalando fuentes                            ║\n"
+		printf "║                                                  ║\n"
+
+
 		# Verificar zip
 		if [ "$DISTRO" == "Debian" ]; then
 			apt install -y zip > /dev/null 2>&1 &
@@ -305,52 +470,7 @@ EOF
 		chmod -R 755 /usr/local/share/fonts > /dev/null
 	}
 
-	install_sway(){
-		if [ "$DISTRO" == "Debian" ]; then
-			install_sway_deb
-		elif [ "$DISTRO" == "Arch" ]; then
-			install_sway_arch
-		elif [ "$DISTRO" == "Fedora" ]; then
-			install_sway_fedora
-		fi
-	}
-
 ### FUNCIONES PENDIENTES ###
-
-	install_sway_deb(){
-
-		# Función para verificar si un paquete está disponible en los repositorios
-		check_and_install() {
-			if apt-cache policy "$1" | grep -q "Candidate:"; then
-				apt install -y "$1" > /dev/null 2>&1 &
-				draw_spinner $! "Instalando $1"
-			else
-				sleep 1 &
-				draw_spinner $! "No disponible $1"
-			fi
-		}
-
-		# Actualizar repositorios
-		printf "║                                                  ║\n"
-		apt update > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando lista de paquetes"
-		
-		# Verificar e instalar los paquetes disponibles
-		draw_separator
-		for paquete in "${deb_paquetes[@]}"; do
-			check_and_install "$paquete"
-		done
-
-		# Descargar configuración de sway
-		draw_separator
-		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
-		draw_spinner $! "Descargando configuración de Sway"
-
-		# Aviso
-		draw_separator
-		sleep 5 &
-		draw_spinner $! "¡Se recomienda reiniciar el sistema!"
-	}
 
 	install_sway_arch(){
 		printf "║    Instalando sway y sus dependencias            ║\n"
@@ -364,97 +484,82 @@ EOF
 		draw_spinner $! "Not yet implemented"
 	}
 
-	install_vscode(){
-		printf "║                                                  ║\n"
-		apt update > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando lista de paquetes"
-
-		apt install -y wget > /dev/null 2>&1 &
-		draw_spinner $! "Instalando... wget"
-		apt install -y gpg > /dev/null 2>&1 &
-		draw_spinner $! "Instalando... gpg"
-		apt install -y apt-transport-https > /dev/null 2>&1 &
-		draw_spinner $! "Instalando... apt-transport-https"
-		
-		wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg 
-		install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg &
-		draw_spinner $! "Descargando clave"
-		
-		echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null 2>&1 &
-		draw_spinner $! "Agregando repositorio"
-		
-		rm -f packages.microsoft.gpg &
-		draw_spinner $! "Limpiando"
-
-		apt update > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando"
-
-		draw_separator
-		apt install -y code > /dev/null 2>&1 &
-		draw_spinner $! "Instalando"
-
-		draw_separator
-		sleep 2 &
-		draw_spinner $! "¡Listo!"
-	}
-
 	install_dotfiles(){
 		printf "║    Instalando dotfiles                           ║\n"
+		printf "║                                                  ║\n"
+
+		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
+		draw_spinner $! "Descargando configuración de Sway"
+	}
+
+	update_fedora(){
+		printf "║    Install rpm fusion repos                      ║\n"
+		printf "║                                                  ║\n"
 		sleep 5 & 
 		draw_spinner $! "Not yet implemented"
 	}
 
-	install_browser(){
+	update_arch(){
+		printf "║    Install yay and AUR packages                  ║\n"
 		printf "║                                                  ║\n"
-		printf "║    Selecciona un navegador:                      ║\n"
-		printf "║                                                  ║\n"
-		printf "║     ╔═════════════════════════════════════╗      ║\n"
-		printf "║     ║ 1. Firefox                          ║      ║\n"
-		printf "║     ║ 2. Brave                            ║      ║\n"
-		printf "║     ╚═════════════════════════════════════╝      ║\n"
-		printf "║                                                  ║\n"
-		printf "║                                                  ║\n"
-
-		draw_footer
-		printf "\033[F\033[F"
-		read -p "║     Selecciona opcion: " opcion
-
-		if [ "$opcion" -eq 1 ]; then
-			draw_header "Instalando Firefox"
-			printf "║                                                  ║\n"
-			if [ "$DISTRO" == "Debian" ]; then
-				apt install -y firefox-esr > /dev/null 2>&1 &
-				pid=$!
-			elif [ "$DISTRO" == "Arch" ]; then
-				pacman -Sy firefox > /dev/null 2>&1 &
-				pid=$!
-			elif [ "$DISTRO" == "Fedora" ]; then
-				dnf install -y firefox > /dev/null 2>&1 &
-				pid=$!
-			else
-				draw_error "No se pudo determinar la distro"
-				exit 1
-			fi
-			draw_spinner $pid "Instalando Firefox"
-
-		elif [ "$opcion" -eq 2 ]; then
-			draw_header "Instalando Brave"
-			printf "║                                                  ║\n"
-			curl -fsS https://dl.brave.com/install.sh | sh > /dev/null 2>&1 &
-			draw_spinner $! "Instalando Brave"
-		else
-			sys_invalid
-		fi
+		sleep 5 & 
+		draw_spinner $! "Not yet implemented"
 	}
 
-	update(){
+	full_install(){
+		printf "║    Instalacion completa de sway                  ║\n"
+		printf "║                                                  ║\n"
+		printf "║    Solo realizar en instalaciones nuevas         ║\n"
+		printf "║    Pensado para instalaciones minimas            ║\n"
+		printf "║    (NETINSTALL)                                  ║\n"
+		printf "║                                                  ║\n"
 		if [ "$DISTRO" == "Debian" ]; then
-			update_debian 1
-		elif [ "$DISTRO" == "Arch" ]; then
-			update_arch 1
-		elif [ "$DISTRO" == "Fedora" ]; then
-			update_fedora 1
+			printf "║    Este script migrara tu sistema Debian a       ║\n"
+			printf "║    a version 'testing'                           ║\n"
+			printf "║                                                  ║\n"
+			printf "║    NO RECOMENDADO SI YA REALIZO LA INSTALACION   ║\n"
+			printf "║    DE SWAY.                                      ║\n"
+			printf "║                                                  ║\n"
 		fi
+		draw_footer
+		printf "\033[F\033[F"
+		read -p "║    ¿Deseas continuar? (s/n): " respuesta
+		if [[ "$respuesta" != "s" && "$respuesta" != "S" ]]; then
+			sys_invalid
+			return
+		fi
+		draw_space
+		draw_separator
+		# Actualizar repositorios
+		update 0
+		draw_separator
+
+		# Instalar sway
+		install_sway 0
+		draw_separator
+		
+		# Instalar dotfiles
+		install_dotfiles
+		draw_separator
+		
+		# Instalar nerd fonts
+		install_fonts
+		draw_separator
+		
+		# Instalar VSCode
+		install_vscode
+		draw_separator
+		
+		# Instalar Navegadores
+		install_browser 1
+		draw_separator
+
+		# Finalizar
+		printf "║                                                  ║\n"
+		sleep 2 &
+		draw_spinner $! "Instalacion finalizada"
+		sleep 3 &
+		draw_spinner $! "Reinicia el sistema ..."
 	}
 
 ### Main menu
@@ -465,12 +570,14 @@ EOF
 			printf "║      Selecciona una opcion:                      ║\n"
 			printf "║                                                  ║\n"
 			printf "║     ╔═════════════════════════════════════╗      ║\n"
-			printf "║     ║ 1. Configurar Sway/Apps             ║      ║\n"
-			printf "║     ║ 2. Configurar dotfiles              ║      ║\n"
-			printf "║     ║ 3. Configurar nuevos repositorios   ║      ║\n"
+			printf "║     ║ 1. Instalar LeOS (Full install)     ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
-			printf "║     ║ 4. ??????                           ║      ║\n"
-			printf "║     ║ 5. ??????                           ║      ║\n"
+			printf "║     ║ 2. Instalar Sway/apps recomendadas  ║      ║\n"
+			printf "║     ║ 3. Copiar dotfiles                  ║      ║\n"
+			printf "║     ║ 4. Configurar nuevos repositorios   ║      ║\n"
+			printf "║     ╠═════════════════════════════════════╣      ║\n"
+			printf "║     ║ 5.                                  ║      ║\n"
+			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 6. Instalar VS Code                 ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
 			printf "║     ║ 8. Instalar NerdFont Hasklig        ║      ║\n"
@@ -486,26 +593,27 @@ EOF
 			printf "\033[F\033[F"
 			read -p "║     Selecciona opcion: " opcion
 			if [ "$opcion" == "1" ]; then
+				draw_header "$DISTRO - LeOS Edition"
+				full_install
+			elif [ "$opcion" == "2" ]; then
 				draw_header "Instalando Escritorio Sway"
 				install_sway
-			elif [ "$opcion" == "2" ]; then
+			elif [ "$opcion" == "3" ]; then
 				draw_header "Descargar dotfiles"
 				install_dotfiles
-			elif [ "$opcion" == "3" ]; then
-				draw_header "Actualizando Repos $DISTRO"
-				update
 			elif [ "$opcion" == "4" ]; then
-				draw_header "???"
-				draw_footer
+				draw_header "Actualizando Repos $DISTRO"
+				update 1
 			elif [ "$opcion" == "5" ]; then
-				draw_header "???"
+				draw_header ":D"
+				printf "║                       :D                         ║\n"
 				draw_footer
 			elif [ "$opcion" == "6" ]; then
 				draw_header "Instalando VSCode"
 				install_vscode
 			elif [ "$opcion" == "7" ]; then
 				draw_header "Instalando Navegador"
-				install_browser
+				install_browser 0
 			elif [ "$opcion" == "8" ]; then
 				draw_header "Instalando NerdFont Hasklig"
 				install_fonts
