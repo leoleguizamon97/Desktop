@@ -337,8 +337,7 @@ EOF
 
 	install_browser(){
 		printf "║    Instalando navegador                          ║\n"
-		opcion=$1
-		if [ $1 -eq 0 ]; then
+		if [ $1 -eq 1 ]; then
 			printf "║                                                  ║\n"
 			printf "║    Selecciona un navegador:                      ║\n"
 			printf "║                                                  ║\n"
@@ -545,7 +544,7 @@ EOF
 		draw_separator
 		
 		# Instalar Navegadores
-		install_browser 1
+		install_browser 0
 		draw_separator
 
 		# Finalizar
@@ -613,7 +612,7 @@ EOF
 				install_vscode
 			elif [ "$opcion" == "7" ]; then
 				draw_header "Instalando Navegador"
-				install_browser 0
+				install_browser 1
 			elif [ "$opcion" == "8" ]; then
 				draw_header "Instalando NerdFont Hasklig"
 				install_fonts
