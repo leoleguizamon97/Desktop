@@ -514,14 +514,6 @@ EOF
 		printf "║    Pensado para instalaciones minimas            ║\n"
 		printf "║    (NETINSTALL)                                  ║\n"
 		printf "║                                                  ║\n"
-		if [ "$DISTRO" == "Debian" ]; then
-			printf "║    Este script migrara tu sistema Debian a       ║\n"
-			printf "║    a version 'testing'                           ║\n"
-			printf "║                                                  ║\n"
-			printf "║    NO RECOMENDADO SI YA REALIZO LA INSTALACION   ║\n"
-			printf "║    DE SWAY.                                      ║\n"
-			printf "║                                                  ║\n"
-		fi
 		draw_footer
 		printf "\033[F\033[F"
 		read -p "║    ¿Deseas continuar? (s/n): " respuesta
@@ -569,6 +561,7 @@ EOF
 		printf "║                                                  ║\n"
 		gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 	}
+
 ### Main menu
 
 	main(){
