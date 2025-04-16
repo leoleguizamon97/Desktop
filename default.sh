@@ -608,7 +608,7 @@ EOF
 				full_install
 			elif [ "$opcion" == "2" ]; then
 				draw_header "Instalando Escritorio Sway"
-				install_sway
+				install_sway 1
 			elif [ "$opcion" == "3" ]; then
 				draw_header "Descargar dotfiles"
 				install_dotfiles
