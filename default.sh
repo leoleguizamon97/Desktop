@@ -28,18 +28,22 @@ EOF
 		btop
 		xwayland
 		network-manager
+		brightnessctl
+		pipewire
+		playerctl
+		zip
+		unzip
 		curl
 		sway
 		swaybg
 		swayidle
 		swaylock
 		wofi
-		brightnessctl
-		pipewire
-		playerctl
-		zip
-		unzip
-		grim
+		gedit
+		nautilus
+		nautilus-share
+		gnome-disk-utility
+		gnome-calculator
 	)
 	arch_paquetes=(
 		sway
@@ -564,6 +568,11 @@ EOF
 		draw_spinner $! "Reinicia el sistema ..."
 	}
 
+	set_dark(){
+		printf "║    Estableciendo tema oscuro                     ║\n"
+		printf "║                                                  ║\n"
+		gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+	}
 ### Main menu
 
 	main(){
@@ -578,7 +587,7 @@ EOF
 			printf "║     ║ 3. Copiar dotfiles                  ║      ║\n"
 			printf "║     ║ 4. Configurar nuevos repositorios   ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
-			printf "║     ║ 5.                                  ║      ║\n"
+			printf "║     ║ 5. Configurar modo oscuro           ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 6. Instalar VS Code                 ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
@@ -607,8 +616,8 @@ EOF
 				draw_header "Actualizando Repos $DISTRO"
 				update 1
 			elif [ "$opcion" == "5" ]; then
-				draw_header ":D"
-				printf "║                       :D                         ║\n"
+				draw_header "Configurar Modo oscuro"
+				set_dark
 				draw_footer
 			elif [ "$opcion" == "6" ]; then
 				draw_header "Instalando VSCode"
