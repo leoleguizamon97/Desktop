@@ -7,14 +7,16 @@ deb_file(){
 # Configurar los repositorios para testing
 
 cat <<EOF >/etc/apt/sources.list
-deb http://deb.debian.org/debian testing main contrib non-free
-deb-src http://deb.debian.org/debian testing main contrib non-free
+deb http://deb.debian.org/debian/ bookworm main non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm main non-free-firmware
 
-deb http://deb.debian.org/debian/ stable main contrib non-free-firmware
-deb-src http://deb.debian.org/debian/ stable main contrib non-free-firmware
+deb http://security.debian.org/debian-security bookworm-security main non-free-firmware
+deb-src http://security.debian.org/debian-security bookworm-security main non-free-firmware
 
-deb http://security.debian.org/debian-security stable-security main non-free-firmware
-deb-src http://security.debian.org/debian-security stable-security main non-free-firmware
+deb http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+
+deb http://deb.debian.org/debian bookworm-backports main
 EOF
 }
 
@@ -235,15 +237,9 @@ EOF
 
 	update_debian() {
 		if [ $1 -eq 1 ] ; then
-			printf "║    Este script migrara tu sistema Debian a       ║\n"
-			printf "║    a version 'testing'                           ║\n"
 			printf "║                                                  ║\n"
-			printf "║    NO RECOMENDADO SI YA REALIZO LA INSTALACION   ║\n"
-			printf "║    DE SWAY.                                      ║\n"
-			printf "║                                                  ║\n"
-			printf "║    De ser asi mantengase en la version STABLE    ║\n"
-			printf "║                                                  ║\n"
-			printf "║                                                  ║\n"
+			printf "║    Se agregaran los repositorios BACKPORT        ║\n"
+			printf "║    para la version estable de Debian             ║\n"
 			printf "║                                                  ║\n"
 
 			draw_footer
@@ -445,7 +441,7 @@ EOF
 
 		# Verificar zip
 		if [ "$DISTRO" == "Debian" ]; then
-			apt install -y zip > /dev/null 2>&1 &
+			apt install -y zip fonts-noto-color-emoji > /dev/null 2>&1 &
 			pid=$!
 		elif [ "$DISTRO" == "Arch" ]; then
 			pacman -S zip > /dev/null 2>&1 &
@@ -454,8 +450,8 @@ EOF
 			dnf install -y zip > /dev/null 2>&1 &
 			pid=$!
 		fi
-		draw_spinner "$pid" "Instalando zip"
-		
+		draw_spinner "$pid" "Instalando zip y Emoji font"
+
 		# Descargar y descomprimir la fuente Nerd Font Hasklig
 		cd /home/"$SUDO_USER"/Downloads
 		if [ -f "/home/"$SUDO_USER"/Downloads/Hasklig.zip" ]; then
