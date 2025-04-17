@@ -64,11 +64,11 @@ EOF
 		wl-clipboard
 		grim
 		slurp
-		--no-install-recommends gnome-text-editor
-		--no-install-recommends eog
-		--no-install-recommends gnome-disk-utility
-		--no-install-recommends nautilus
-		--no-install-recommends nautilus-share
+		"--no-install-recommends gnome-text-editor"
+		"--no-install-recommends eog"
+		"--no-install-recommends gnome-disk-utility"
+		"--no-install-recommends nautilus"
+		"--no-install-recommends nautilus-share"
 
 	)
 	arch_paquetes=(
@@ -140,19 +140,29 @@ EOF
 
 	draw_spinner() {
 		local pid=$1
+		local text=$2
 		local delay=0.1
-		local spinstr='|/-\'
+		local spinstr='|/-\\'
+		local total_width=48
+		local spinner_len=3
+		local msg_width=$(( total_width - spinner_len - 1 ))
+		
 		while kill -0 "$pid" 2>/dev/null; do
-			for ((i=0; i<${#spinstr}; i++)); do
-				printf "\033[F"							#Vuelve a linea anterior y limpia \033[2K
-				printf "\r║ %.43s %$(( ${#2} < 43 ? 43 - ${#2} : 1))s [%s] ║\n" "$2" "" "${spinstr:i:1}"
+			for (( i=0; i<${#spinstr}; i++ )); do
+				printf "\033[F\033[2K"
+				printf "║ %-*.*s [%s] ║\n" \
+					"$msg_width" "$msg_width" "$text" "${spinstr:i:1}"
 				draw_footer
 				sleep "$delay"
 			done
 		done
-		printf "\033[F"
-		printf "║ %.37s %$((37 > ${#2} ? 37 - ${#2} : 1))s %s ║\n\n" "$2" "" "Listo [✔]"
+
+		# Cuando termine, mostrar “Listo [✔]”
+		printf "\033[F\033[2K"
+		msg_width=$(( msg_width - 6 ))
+		printf "║ %-*.*s %s ║\n\n" "$msg_width" "$msg_width" "$text" "Listo [✔]"
 	}
+
 
 	draw_header(){
 		clear
@@ -581,9 +591,9 @@ EOF
 		# Eliminar networkmanager
 		rm /etc/network/interfaces > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando configuracion WIFI"
-
-		# Finalizar
+		draw_separator
 		printf "║                                                  ║\n"
+		# Finalizar
 		sleep 2 &
 		draw_spinner $! "Instalacion finalizada"
 		sleep 3 &
@@ -624,7 +634,7 @@ EOF
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 6. Instalar VS Code                 ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
-			printf "║     ║ 8. Instalar NerdFont Hasklig        ║      ║\n"
+			printf "║     ║ 8. Instalar Fuentes                 ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 9. Reiniciar el sistema             ║      ║\n"
 			printf "║     ║ 0. Salir                            ║      ║\n"
