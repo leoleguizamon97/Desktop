@@ -49,6 +49,7 @@ EOF
 		pipewire
 		zip
 		unzip
+		jq
 		curl
 		wofi
 		sway
@@ -328,13 +329,15 @@ EOF
 	install_sway_deb(){
 		# Funcion para verificar si un paquete está disponible en los repositorios
 		check_and_install() {
-			if apt-cache policy "$1" | grep -q "Candidate:"; then
-				apt install -y "$1" > /dev/null 2>&1 &
-				draw_spinner $! "Instalando $1"
-			else
-				sleep 1 &
-				draw_spinner $! "No disponible $1"
-			fi
+			apt install "$1" -y > /dev/null 2>&1 &
+			draw_spinner $! "Instalando $1"
+			# if apt-cache policy "$1" | grep -q "Candidate:"; then
+			# 	apt install -y "$1" > /dev/null 2>&1 &
+			# 	draw_spinner $! "Instalando $1"
+			# else
+			# 	sleep 1 &
+			# 	draw_spinner $! "No disponible $1"
+			# fi
 		}
 
 		# Actualizar repositorios
