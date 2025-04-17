@@ -320,6 +320,22 @@ EOF
 		draw_spinner $! "Eliminando paquetes obsoletos"
 	}
 
+	set_dark(){
+		printf "║    Configurando GTK                              ║\n"
+		printf "║                                                  ║\n"
+
+		# Establecer tema oscuro gnome apps
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
+			gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' &
+		draw_spinner $! "Estableciendo tema oscuro"
+
+		# Cambiar tema GTK para GTK3
+		mkdir -p "$(dirname "$GTK3_CONF")"
+		gtk3_file &
+		draw_spinner $! "Estableciendo tema GTK3"
+		chown "$REAL_USER:$REAL_USER" "$GTK3_CONF"
+	}
+
 ### Install
 
 	install_sway(){
@@ -494,42 +510,6 @@ EOF
 		chmod -R 755 /usr/local/share/fonts > /dev/null
 	}
 
-### FUNCIONES PENDIENTES ###
-
-	install_sway_arch(){
-		printf "║    Instalando sway y sus dependencias            ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
-	}
-	
-	install_sway_fedora(){
-		printf "║    Instalando sway y sus dependencias            ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
-	}
-
-	install_dotfiles(){
-		printf "║    Instalando dotfiles                           ║\n"
-		printf "║                                                  ║\n"
-
-		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
-		draw_spinner $! "Descargando configuracion de Sway"
-	}
-
-	update_fedora(){
-		printf "║    Install rpm fusion repos                      ║\n"
-		printf "║                                                  ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
-	}
-
-	update_arch(){
-		printf "║    Install yay and AUR packages                  ║\n"
-		printf "║                                                  ║\n"
-		sleep 5 & 
-		draw_spinner $! "Not yet implemented"
-	}
-
 	full_install(){
 		printf "║    Instalacion completa de sway                  ║\n"
 		printf "║                                                  ║\n"
@@ -587,20 +567,39 @@ EOF
 		draw_spinner $! "Reinicia el sistema ..."
 	}
 
-	set_dark(){
-		printf "║    Configurando GTK                              ║\n"
+### FUNCIONES PENDIENTES ###
+
+	install_sway_arch(){
+		printf "║    Instalando sway y sus dependencias            ║\n"
+		sleep 5 & 
+		draw_spinner $! "Not yet implemented"
+	}
+	
+	install_sway_fedora(){
+		printf "║    Instalando sway y sus dependencias            ║\n"
+		sleep 5 & 
+		draw_spinner $! "Not yet implemented"
+	}
+
+	update_fedora(){
+		printf "║    Install rpm fusion repos                      ║\n"
+		printf "║                                                  ║\n"
+		sleep 5 & 
+		draw_spinner $! "Not yet implemented"
+	}
+
+	update_arch(){
+		printf "║    Install yay and AUR packages                  ║\n"
+		printf "║                                                  ║\n"
+		sleep 5 & 
+		draw_spinner $! "Not yet implemented"
+	}
+	install_dotfiles(){
+		printf "║    Instalando dotfiles                           ║\n"
 		printf "║                                                  ║\n"
 
-		# Establecer tema oscuro gnome apps
-		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
-			gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' &
-		draw_spinner $! "Estableciendo tema oscuro"
-
-		# Cambiar tema GTK para GTK3
-		mkdir -p "$(dirname "$GTK3_CONF")"
-		gtk3_file &
-		draw_spinner $! "Estableciendo tema GTK3"
-		chown "$REAL_USER:$REAL_USER" "$GTK3_CONF"
+		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
+		draw_spinner $! "Descargando configuracion de Sway"
 	}
 
 ### Main menu
