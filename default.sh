@@ -26,7 +26,6 @@ gtk3_file(){
 cat > "$GTK3_CONF" <<EOF
 [Settings]
 gtk-application-prefer-dark-theme=true
-gtk-font-name="Hasklug Nerd Font" 12
 EOF
 }
 
@@ -57,11 +56,19 @@ EOF
 		swaybg
 		swayidle
 		swaylock
+		dunst
+		libnotify-bin
 		btop
+		totem
+		wl-clipboard
+		grim
+		slurp
 		--no-install-recommends gnome-text-editor
+		--no-install-recommends eog
 		--no-install-recommends gnome-disk-utility
 		--no-install-recommends nautilus
 		--no-install-recommends nautilus-share
+
 	)
 	arch_paquetes=(
 		sway
