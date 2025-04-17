@@ -55,21 +55,20 @@ EOF
 		sway
 		xwayland
 		swaybg
+		grim
+		slurp
 		swayidle
 		swaylock
 		dunst
 		libnotify-bin
 		btop
-		totem
 		wl-clipboard
-		grim
-		slurp
 		"--no-install-recommends gnome-text-editor"
 		"--no-install-recommends eog"
+		totem
 		"--no-install-recommends gnome-disk-utility"
 		"--no-install-recommends nautilus"
 		"--no-install-recommends nautilus-share"
-
 	)
 	arch_paquetes=(
 		sway
@@ -337,19 +336,6 @@ EOF
 	}
 
 	install_sway_deb(){
-		# Funcion para verificar si un paquete está disponible en los repositorios
-		check_and_install() {
-			apt install "$1" -y > /dev/null 2>&1 &
-			draw_spinner $! "Instalando $1"
-			# if apt-cache policy "$1" | grep -q "Candidate:"; then
-			# 	apt install -y "$1" > /dev/null 2>&1 &
-			# 	draw_spinner $! "Instalando $1"
-			# else
-			# 	sleep 1 &
-			# 	draw_spinner $! "No disponible $1"
-			# fi
-		}
-
 		# Actualizar repositorios
 		apt update > /dev/null 2>&1 &
 		draw_spinner $! "Actualizando lista de paquetes"
@@ -358,7 +344,8 @@ EOF
 		draw_space
 
 		for paquete in "${deb_paquetes[@]}"; do
-			check_and_install "$paquete"
+			apt install $paquete -y  > /dev/null 2>&1 &
+			draw_spinner $! "Instalando $paquete"
 		done
 
 		apt remove yelp -y > /dev/null 2>&1 &
@@ -368,7 +355,7 @@ EOF
 		if [ $1 -eq 1 ]; then
 			draw_space
 			sleep 5 &
-			draw_spinner $! "¡Se recomienda reiniciar el sistema!"
+			draw_spinner $! "Se recomienda reiniciar el sistema"
 		fi
 	}
 
