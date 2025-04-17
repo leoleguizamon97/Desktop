@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
+export LANG=C
+export LC_ALL=C
 
 ### Files ###
 
@@ -20,14 +22,28 @@ deb http://deb.debian.org/debian bookworm-backports main
 EOF
 }
 
+gtk3_file(){
+cat > "$GTK3_CONF" <<EOF
+[Settings]
+gtk-application-prefer-dark-theme=true
+gtk-font-name="Hasklug Nerd Font" 12
+EOF
+}
+
 ### VARIABLES ###
 
 	TAB='$\t'
 	TAB_SIZE='\t'
 	DISTRO=""
+	
+	REAL_USER=$(logname)
+	USER_ID=$(id -u "$REAL_USER")
 
+	DBUS_ADDR="unix:path=/run/user/$USER_ID/bus"
+
+	GTK3_CONF="/home/$REAL_USER/.config/gtk-3.0/settings.ini"
+	
 	deb_paquetes=(
-		btop
 		xwayland
 		network-manager
 		brightnessctl
@@ -41,11 +57,9 @@ EOF
 		swayidle
 		swaylock
 		wofi
+		btop
 		gedit
-		nautilus
-		nautilus-share
-		gnome-disk-utility
-		gnome-calculator
+		thunar
 	)
 	arch_paquetes=(
 		sway
@@ -233,6 +247,15 @@ EOF
 		elif [ "$DISTRO" == "Fedora" ]; then
 			update_fedora $1
 		fi
+		# Completado
+		if [ $1 -eq 1 ] ; then
+			printf "\033[F"
+			printf "║                                                  ║\n"
+			printf "║    Repositorios agregados!                       ║\n"
+			printf "║                                                  ║\n"
+
+			draw_footer
+		fi
 	}
 
 	update_debian() {
@@ -276,17 +299,6 @@ EOF
 		# Limpiar paquetes obsoletos
 		apt autoremove -y > /dev/null 2>&1 &
 		draw_spinner $! "Eliminando paquetes obsoletos"
-
-		# Completado
-		if [ $1 -eq 1 ] ; then
-			printf "\033[F"
-			printf "║                                                  ║\n"
-			printf "║    Migración a Debian 'testing' completada       ║\n"
-			printf "║    Reinicia tu sistema para aplicar los cambios  ║\n"
-			printf "║                                                  ║\n"
-
-			draw_footer
-		fi
 	}
 
 ### Install
@@ -305,7 +317,7 @@ EOF
 	}
 
 	install_sway_deb(){
-		# Función para verificar si un paquete está disponible en los repositorios
+		# Funcion para verificar si un paquete está disponible en los repositorios
 		check_and_install() {
 			if apt-cache policy "$1" | grep -q "Candidate:"; then
 				apt install -y "$1" > /dev/null 2>&1 &
@@ -326,6 +338,9 @@ EOF
 		for paquete in "${deb_paquetes[@]}"; do
 			check_and_install "$paquete"
 		done
+
+		apt remove yelp -y > /dev/null 2>&1 &
+		draw_spinner $! "Limpiando"
 
 		# Aviso
 		if [ $1 -eq 1 ]; then
@@ -462,10 +477,10 @@ EOF
 		fi
 		
 		sudo unzip Hasklig.zip -d /usr/local/share/fonts/Hasklig > /dev/null 2>&1 &
-		draw_spinner $! "Descomprimiendo Nerdfont Hasklig"
+		draw_spinner $! "Descomprimiendo Nerdfont Hasklug"
 		
 		fc-cache -fv > /dev/null 2>&1 &
-		draw_spinner $! "Actualizando caché de fuentes"
+		draw_spinner $! "Actualizando cache de fuentes"
 		
 		chmod -R 755 /usr/local/share/fonts > /dev/null
 	}
@@ -489,7 +504,7 @@ EOF
 		printf "║                                                  ║\n"
 
 		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
-		draw_spinner $! "Descargando configuración de Sway"
+		draw_spinner $! "Descargando configuracion de Sway"
 	}
 
 	update_fedora(){
@@ -547,6 +562,10 @@ EOF
 		install_browser 0
 		draw_separator
 
+		# Establecer tema oscuro
+		set_dark
+		draw_separator
+
 		# Finalizar
 		printf "║                                                  ║\n"
 		sleep 2 &
@@ -556,9 +575,23 @@ EOF
 	}
 
 	set_dark(){
-		printf "║    Estableciendo tema oscuro                     ║\n"
+		printf "║    Configurando GTK                              ║\n"
 		printf "║                                                  ║\n"
-		gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+
+		# Establecer tema oscuro gnome apps
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
+			gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' &
+		draw_spinner $! "Estableciendo tema oscuro"
+
+		# Preferencias de apps gnome
+		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
+			gsettings set org.gnome.gedit.preferences.editor scheme 'oblivion' &
+		
+		# Cambiar tema GTK para GTK3
+		mkdir -p "$(dirname "$GTK3_CONF")"
+		gtk3_file &
+		draw_spinner $! "Estableciendo tema GTK3"
+		chown "$REAL_USER:$REAL_USER" "$GTK3_CONF"
 	}
 
 ### Main menu
@@ -575,7 +608,7 @@ EOF
 			printf "║     ║ 3. Copiar dotfiles                  ║      ║\n"
 			printf "║     ║ 4. Configurar nuevos repositorios   ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
-			printf "║     ║ 5. Configurar modo oscuro           ║      ║\n"
+			printf "║     ║ 5. Configurar GTK                   ║      ║\n"
 			printf "║     ╠═════════════════════════════════════╣      ║\n"
 			printf "║     ║ 6. Instalar VS Code                 ║      ║\n"	
 			printf "║     ║ 7. Instalar Navegador               ║      ║\n"
@@ -598,15 +631,14 @@ EOF
 				draw_header "Instalando Escritorio Sway"
 				install_sway 1
 			elif [ "$opcion" == "3" ]; then
-				draw_header "Descargar dotfiles"
+				draw_header "Descarga de dotfiles"
 				install_dotfiles
 			elif [ "$opcion" == "4" ]; then
 				draw_header "Actualizando Repos $DISTRO"
 				update 1
 			elif [ "$opcion" == "5" ]; then
-				draw_header "Configurar Modo oscuro"
+				draw_header "Configurar GTK"
 				set_dark
-				draw_footer
 			elif [ "$opcion" == "6" ]; then
 				draw_header "Instalando VSCode"
 				install_vscode
@@ -614,7 +646,7 @@ EOF
 				draw_header "Instalando Navegador"
 				install_browser 1
 			elif [ "$opcion" == "8" ]; then
-				draw_header "Instalando NerdFont Hasklig"
+				draw_header "Instalando Fuentes"
 				install_fonts
 			elif [ "$opcion" == "9" ]; then
 				draw_header "Reiniciando el sistema"
@@ -625,7 +657,7 @@ EOF
 			else
 				sys_invalid
 			fi
-			sleep 2
+			sleep 3
 		done
 	}
 
@@ -639,7 +671,7 @@ draw_spinner $! "Verificando permisos de sudo..."
 ver_sudo
 
 sleep 0.2 &
-draw_spinner $! "Verificando distribución..."
+draw_spinner $! "Verificando distribucion..."
 ver_distro
 
 sleep 0.2 &
