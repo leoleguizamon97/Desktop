@@ -44,22 +44,24 @@ EOF
 	GTK3_CONF="/home/$REAL_USER/.config/gtk-3.0/settings.ini"
 	
 	deb_paquetes=(
-		xwayland
 		network-manager
 		brightnessctl
-		pipewire
 		playerctl
+		pipewire
 		zip
 		unzip
 		curl
+		wofi
 		sway
+		xwayland
 		swaybg
 		swayidle
 		swaylock
-		wofi
 		btop
-		gedit
-		thunar
+		--no-install-recommends gnome-text-editor
+		--no-install-recommends gnome-disk-utility
+		--no-install-recommends nautilus
+		--no-install-recommends nautilus-share
 	)
 	arch_paquetes=(
 		sway
@@ -566,6 +568,10 @@ EOF
 		set_dark
 		draw_separator
 
+		# Eliminar networkmanager
+		rm /etc/network/interfaces > /dev/null 2>&1 &
+		draw_spinner $! "Eliminando configuracion WIFI"
+
 		# Finalizar
 		printf "║                                                  ║\n"
 		sleep 2 &
@@ -583,10 +589,6 @@ EOF
 			gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' &
 		draw_spinner $! "Estableciendo tema oscuro"
 
-		# Preferencias de apps gnome
-		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
-			gsettings set org.gnome.gedit.preferences.editor scheme 'oblivion' &
-		
 		# Cambiar tema GTK para GTK3
 		mkdir -p "$(dirname "$GTK3_CONF")"
 		gtk3_file &
