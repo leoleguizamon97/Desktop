@@ -47,6 +47,8 @@ EOF
 		brightnessctl
 		playerctl
 		pipewire
+		pulseaudio-utils
+		lm-sensors
 		zip
 		unzip
 		jq
@@ -328,6 +330,9 @@ EOF
 		sudo -u "$REAL_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
 			gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' &
 		draw_spinner $! "Estableciendo tema oscuro"
+
+		xdg-user-dirs-update &
+		draw_spinner $! "Estableciendo carpetas de usuario"
 
 		# Cambiar tema GTK para GTK3
 		mkdir -p "$(dirname "$GTK3_CONF")"
