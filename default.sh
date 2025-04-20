@@ -43,6 +43,7 @@ EOF
 	GTK3_CONF="/home/$REAL_USER/.config/gtk-3.0/settings.ini"
 	
 	deb_paquetes=(
+		xdg-desktop-portal
 		network-manager
 		brightnessctl
 		playerctl
@@ -51,6 +52,7 @@ EOF
 		lm-sensors
 		zip
 		unzip
+		micro
 		jq
 		curl
 		wofi
@@ -65,7 +67,6 @@ EOF
 		libnotify-bin
 		btop
 		wl-clipboard
-		"--no-install-recommends gnome-text-editor"
 		"--no-install-recommends eog"
 		totem
 		"--no-install-recommends gnome-disk-utility"
@@ -603,8 +604,10 @@ EOF
 		printf "║    Instalando dotfiles                           ║\n"
 		printf "║                                                  ║\n"
 
-		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/sway.git /home/"$SUDO_USER"/.config/sway > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/dotfiles > /dev/null 2>&1 &
 		draw_spinner $! "Descargando configuracion de Sway"
+
+		sudo -u "$SUDO_USER" mv dotfiles/ /home/"$SUDO_USER"/ > /dev/null 2>&1 &
 	}
 
 ### Main menu
