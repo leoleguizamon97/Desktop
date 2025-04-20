@@ -604,10 +604,11 @@ EOF
 		printf "║    Instalando dotfiles                           ║\n"
 		printf "║                                                  ║\n"
 
-		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/dotfiles > /dev/null 2>&1 &
-		draw_spinner $! "Descargando configuracion de Sway"
+		sudo -u "$SUDO_USER" git clone https://github.com/leoleguizamon97/dotfiles
+		draw_spinner $! "Descargando Dotfiles"
 
-		sudo -u "$SUDO_USER" mv dotfiles/ /home/"$SUDO_USER"/ > /dev/null 2>&1 &
+		sudo -u "$SUDO_USER" mv dotfiles/.* /home/"$SUDO_USER"/
+		draw_spinner $! "Instalando Dotfiles"
 	}
 
 ### Main menu
