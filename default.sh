@@ -70,6 +70,7 @@ EOF
 		"--no-install-recommends eog"
 		totem
 		"--no-install-recommends gnome-disk-utility"
+		"--no-install-recommends gnome-text-editor"
 		"--no-install-recommends nautilus"
 		"--no-install-recommends nautilus-share"
 	)
