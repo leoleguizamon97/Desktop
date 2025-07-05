@@ -72,7 +72,7 @@ EOF
 		"--no-install-recommends gnome-disk-utility"
 		"--no-install-recommends gnome-text-editor"
 		"--no-install-recommends nautilus"
-		"--no-install-recommends nautilus-share"
+  		waybar
 	)
 	arch_paquetes=(
 		sway
@@ -539,8 +539,8 @@ EOF
 		draw_separator
 
 		# Actualizar repositorios
-		update 0
-		draw_separator
+		//update 0
+		//draw_separator
 
 		# Instalar sway
 		install_sway 0
