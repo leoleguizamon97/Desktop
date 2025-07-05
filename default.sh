@@ -539,8 +539,8 @@ EOF
 		draw_separator
 
 		# Actualizar repositorios
-		//update 0
-		//draw_separator
+		#update 0
+		#draw_separator
 
 		# Instalar sway
 		install_sway 0
